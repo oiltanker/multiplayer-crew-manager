@@ -45,13 +45,14 @@ local function respawnCharacter(manager, charInfo, spawnPoint)
     local char = Character.Create(charInfo, spawnPoint.WorldPosition, charInfo.Name, 0, true, true);
     char.TeamID = 1 -- Team1
     if char.Info ~= charInfo then char.Info = charInfo end -- if not the same for some reason ?
+    char.Info.Character = char
 
     char.LoadTalents()
     charInfo.SetExperience(charInfo.ExperiencePoints);
 
     if mcm_config.respawn_penalty then manager.GiveRespawnPenaltyAffliction(char) end
     char.GiveJobItems(spawnPoint)
-    char.GiveIdCardTags(spawnPoint)    
+    char.GiveIdCardTags(spawnPoint)
 end
 
 local function getRespawnSubChars(manager)
@@ -173,6 +174,18 @@ function mcm_respawn_Update(this, args)
     end
     -- override
     return true
+end
+
+
+function mcm_cmanager_InitRound(this, args)
+    if not mcm_isCampaignMode then return end
+
+    local crewManager = this
+    local characterInfos = crewManager.characterInfos
+    for i,charInfo in pairs(characterInfos) do
+        charInfo.SetExperience(charInfo.ExperiencePoints);
+        -- LoadTalents he is prohibited, removes all the talents
+    end
 end
 
 

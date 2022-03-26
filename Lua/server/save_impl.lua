@@ -31,7 +31,7 @@ function mcm_LoadCampaign()
 end
 
 
-function mcm_StartGame_Begin()
+function mcm_StartGame()
     if not mcm_CampaignLoadedProperly then
         if not mcm_LoadCampaign() then return end
     end
@@ -105,7 +105,7 @@ function mcm_SaveMultiplayer(this, args)
 end
 
 
-local function getDymmyC(char, charInfo)
+function getDymmyC(char, charInfo)
     local dummyC = Client.__new(charInfo.Name, 127)
     dummyC.CharacterInfo = charInfo
     dummyC.Character = char
@@ -116,7 +116,7 @@ local function getDymmyC(char, charInfo)
     return dummyC
 end
 
-function mcm_before_SavePlayers()
+function mcm_SavePlayers_before()
     print('[MCM-SERVER] Saving players (pre-process)')
     local session = Game.GameSession
     local characterData = session.GameMode.characterData
@@ -200,7 +200,7 @@ function mcm_before_SavePlayers()
 end
 
 
-function mcm_after_SavePlayers()
+function mcm_SavePlayers_after()
     print('[MCM-SERVER] Saving players (post-process)')
     local session = Game.GameSession
 

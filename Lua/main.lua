@@ -1,6 +1,7 @@
 --[[
     TODO:
-        - fix talents not loaded and reset on respawn
+        - test situational talents
+        - test mission DataRewards errors, if they exist
 ]]--
 
 local enabled = Game.GetEnabledContentPackages()
@@ -20,6 +21,7 @@ if SERVER then
     dofile("Mods/Multiplayer crew manager/Lua/server/chat_commands.lua")
     dofile("Mods/Multiplayer crew manager/Lua/server/save_impl.lua")
     dofile("Mods/Multiplayer crew manager/Lua/server/control.lua")
+    dofile("Mods/Multiplayer crew manager/Lua/server/session_logic.lua")
     dofile("Mods/Multiplayer crew manager/Lua/server/server_side.lua")
 else
     dofile("Mods/Multiplayer crew manager/Lua/client/client_side.lua")

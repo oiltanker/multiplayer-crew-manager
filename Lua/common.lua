@@ -36,6 +36,19 @@ if SERVER then
     register('Barotrauma.Mission')
     register('System.Collections.Generic.HashSet`1[[System.String]]', 'HashSet_String')
 
+    register('Barotrauma.GameSession')
+    register('Barotrauma.AbilityExperienceGainMultiplier')
+    register('Barotrauma.AbilityMissionMoneyGainMultiplier')
+    register('Barotrauma.Location')
+    register('Barotrauma.Reputation')
+    register('Barotrauma.Faction')
+    register('Barotrauma.SetDataAction')
+    --register('Barotrauma.SetDataAction+OperationType', 'OperationType')
+    register('Barotrauma.MissionPrefab')
+    --register('Tuple`3[[System.String], [System.Object], [System.Enum]]', 'Tuple_String_Object_Enum')
+    register('Barotrauma.CampaignMetadata')
+    register('Barotrauma.Location+AbilityLocation', 'AbilityLocation')
+
     LuaUserData.MakeFieldAccessible(Type_MultiPlayerCampaign, "characterData")
     LuaUserData.MakeFieldAccessible(Type_CrewManager, "characterInfos")
     LuaUserData.MakeFieldAccessible(Type_CharacterCampaignData, "itemData")
@@ -45,6 +58,10 @@ if SERVER then
     LuaUserData.MakeFieldAccessible(Type_RespawnManager, "shuttleSteering")
     LuaUserData.MakeFieldAccessible(Type_GameServer, "respawnManager")
     LuaUserData.MakeFieldAccessible(Type_Mission, "level")
+
+    LuaUserData.MakeFieldAccessible(Type_GameSession, "missions")
+    LuaUserData.MakeMethodAccessible(Type_Reputation, "set_Value")
+    LuaUserData.MakeMethodAccessible(Type_Location, "set_Discovered")
 end
 
 
