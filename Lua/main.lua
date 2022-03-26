@@ -1,7 +1,6 @@
 --[[
     TODO:
-        - test situational talents
-        - test mission DataRewards errors, if they exist
+        - fix crash on mission select
 ]]--
 
 local enabled = Game.GetEnabledContentPackages()

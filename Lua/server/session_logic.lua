@@ -185,7 +185,7 @@ function mcm_reputation_AddReputation(this, args)
 end
 
 
-function mcm_cmode_GetAddedMissionCount(this, args)
+function mcm_cmode_GetAddedMissionCount(this, args) -- ruins CLR, cannot override, nor hook
     if not mcm_isCampaignMode then return end
 
     local count = 0
