@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Multiplayer crew manager" path="Mods/Multiplayer crew manager/filelist.xml" corepackage="false" gameversion="0.16.7.0" steamworkshopid="2775613786" installtime="1648339803">
+<contentpackage name="Multiplayer crew manager" path="Mods/Multiplayer crew manager/filelist.xml" corepackage="false" gameversion="0.16.7.0" steamworkshopid="2775613786" installtime="1648425923">
   <None file="Mods/Multiplayer crew manager/Lua/Autorun/init.lua" />
   <None file="Mods/Multiplayer crew manager/Lua/ForcedAutorun/init.lua" />
   <None file="Mods/Multiplayer crew manager/Lua/common.lua" />

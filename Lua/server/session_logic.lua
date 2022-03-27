@@ -215,7 +215,8 @@ function mcm_location_GetExtraSpecialSalesCount(this, args)
         if maxMissions < essc then maxMissions = essc end
     end
 
-    return maxMissions -- override
+    --return maxMissions -- override
+    return Convert.ToInt32(maxMissions) -- override
 end
 
 function mcm_location_Discover(this, args)

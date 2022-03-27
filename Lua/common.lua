@@ -43,11 +43,11 @@ if SERVER then
     register('Barotrauma.Reputation')
     register('Barotrauma.Faction')
     register('Barotrauma.SetDataAction')
-    --register('Barotrauma.SetDataAction+OperationType', 'OperationType')
     register('Barotrauma.MissionPrefab')
-    --register('Tuple`3[[System.String], [System.Object], [System.Enum]]', 'Tuple_String_Object_Enum')
     register('Barotrauma.CampaignMetadata')
     register('Barotrauma.Location+AbilityLocation', 'AbilityLocation')
+    register('System.Int32')
+    register('System.Convert')
 
     LuaUserData.MakeFieldAccessible(Type_MultiPlayerCampaign, "characterData")
     LuaUserData.MakeFieldAccessible(Type_CrewManager, "characterInfos")

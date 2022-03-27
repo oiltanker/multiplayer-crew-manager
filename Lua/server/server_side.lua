@@ -60,8 +60,8 @@ Hook.HookMethod("Barotrauma.Mission", "GiveReward", mcm_mission_GiveReward, Hook
 Hook.HookMethod("Barotrauma.Reputation", "AddReputation", mcm_reputation_AddReputation, Hook.HookMethodType.Before)
 ---- player mission count
 --Hook.HookMethod("Barotrauma.CampaignSettings", "GetAddedMissionCount", mcm_cmode_GetAddedMissionCount, Hook.HookMethodType.Before)
--- player special sales count
-Hook.HookMethod("Barotrauma.Location", "GetExtraSpecialSalesCount", mcm_location_GetExtraSpecialSalesCount, Hook.HookMethodType.Before)
+---- player special sales count
+--Hook.HookMethod("Barotrauma.Location", "GetExtraSpecialSalesCount", mcm_location_GetExtraSpecialSalesCount, Hook.HookMethodType.Before)
 -- player location discovery
 Hook.HookMethod("Barotrauma.Location", "Discover", mcm_location_Discover, Hook.HookMethodType.Before)
 
