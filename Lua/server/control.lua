@@ -36,11 +36,28 @@ local function getRespawnPoints(manager, charInfos)
     return WayPoint.SelectCrewSpawnPoints(charInfos, respawnSub);
 end
 
+local function reduceCharacterSkills(charInfo)
+    if charInfo.Job == null then return end
+    for i,skill in pairs(charInfo.Job.Skills) do
+        local prefab = nil
+        for i,prfb in pairs(charInfo.Job.Prefab.Skills) do
+            if skill.Identifier:lower() == prfb.Identifier:lower() then
+                prefab = prfb
+                break
+            end
+        end
+
+        if prefab ~= nil then
+            skill.Level = math.max(prefab.LevelRange.Start, skill.Level * 0.9)
+        end
+    end
+end
+
 local function respawnCharacter(manager, charInfo, spawnPoint)
     charInfo.ClearCurrentOrders()
     charInfo.RemoveSavedStatValuesOnDeath()
     charInfo.CauseOfDeath = nil;
-    if mcm_config.respawn_penalty then manager.ReduceCharacterSkills(charInfo) end
+    if mcm_config.respawn_penalty then reduceCharacterSkills(charInfo) end
 
     local char = Character.Create(charInfo, spawnPoint.WorldPosition, charInfo.Name, 0, true, true);
     char.TeamID = 1 -- Team1
