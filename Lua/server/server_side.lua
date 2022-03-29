@@ -54,6 +54,10 @@ Hook.HookMethod("Barotrauma.GameSession", "EndRound", mcm_session_EndRound_after
 Hook.HookMethod("Barotrauma.Mission", "End", function (this, args)
     if not mcm_allow_mission_end then return true end
 end, Hook.HookMethodType.Before)
+-- only manual talent checks on session end
+Hook.HookMethod("Barotrauma.Character", "CheckTalents", { "Barotrauma.AbilityEffectType" }, function ()
+    if not mcm_allow_mission_end then return true end
+end, Hook.HookMethodType.Before)
 -- player mission exp
 Hook.HookMethod("Barotrauma.Mission", "GiveReward", mcm_mission_GiveReward, Hook.HookMethodType.Before)
 -- player reputation

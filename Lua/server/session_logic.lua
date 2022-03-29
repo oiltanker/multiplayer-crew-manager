@@ -1,19 +1,9 @@
 mcm_allow_mission_end = true
-local clientControlBackup2 = nil
 
 function mcm_session_EndRound_before(this, args)
     if not mcm_isCampaignMode then return end
 
     local missions = this.missions
-    -- backup client control
-    clientControlBackup2 = {}
-    for i,client in pairs(Client.ClientList) do
-        if mcm_client_manager:get(client) ~= nil then
-            clientControlBackup2[client] = { char = client.Character, info = client.CharacterInfo }
-            mcm_client_manager:set(client, nil)
-            client.CharacterInfo = nil
-        end
-    end
 
     for i,mission in pairs(missions) do
         mission.End()
@@ -57,12 +47,6 @@ function mcm_session_EndRound_after(this, args)
     if not mcm_isCampaignMode then return end
 
     mcm_allow_mission_end = true
-    -- restore client control
-    for client,charPkg in pairs(clientControlBackup2) do
-        client.CharacterInfo = charPkg.info
-        mcm_client_manager:set(client, charPkg.char)
-    end
-    clientControlBackup2 = nil
 end
 
 

@@ -1,6 +1,5 @@
 --[[
     TODO:
-        - fix crash on mission select
 ]]--
 
 local enabled = Game.GetEnabledContentPackages()
