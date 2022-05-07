@@ -13,6 +13,7 @@ Multiplayer crew manager is a modification that makes Multiplayer Campaign play 
 
 ## To keep in mind
 
+* **To run this mod**, as every other LuaCs mod, you must select **LuaForBarotrauma** server executable in '**Host Server**' menu.
 * **ALWAYS** keep your campaign files backed up
 * Be careful with new respawning mechanic, when doing a level transition
 * Campaign most probably cannot be converted back, without manual editing *(xml file)*, or in-game shenanigans
@@ -21,10 +22,9 @@ Multiplayer crew manager is a modification that makes Multiplayer Campaign play 
 
 # Client-side lua installation
 
-Install **[Lua For Barotrauma](https://steamcommunity.com/workshop/filedetails/?id=2559634234)** mod
-
-* In the setting menu select LuaForBarotrauma as the content package, on top of the mod menu.
-* Host in-game server **twice\*** (it will give the error the first time)
+* Install **[Lua For Barotrauma](https://steamcommunity.com/sharedfiles/filedetails/?id=2559634234)** mod
+* In the settings mod menu enable **LuaForBarotrauma**.
+* In multiplayer select '**Host Server**', select **LuaForBarotrauma** executable.
 * While in the hosting menu open the console window *(most commonly **`F3`**)*
 * Type in or copy, then execute the console command: `install_cl_lua`
 * Restart the game
