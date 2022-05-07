@@ -1,16 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Multiplayer crew manager" path="Mods/Multiplayer crew manager/filelist.xml" corepackage="false" gameversion="0.16.7.0" steamworkshopid="2775613786" installtime="1648594441">
-  <None file="Mods/Multiplayer crew manager/Lua/Autorun/init.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/ForcedAutorun/init.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/common.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/server/config.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/server/chat_commands.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/server/save_impl.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/server/session_logic.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/server/server_side.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/server/control.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/client/client_side.lua" />
-  <None file="Mods/Multiplayer crew manager/Lua/main.lua" />
-  <None file="Mods/Multiplayer crew manager/LICENSE" />
-  <None file="Mods/Multiplayer crew manager/README.md" />
+<contentpackage name="Multiplayer crew manager" modversion="1.0.1" corepackage="False" steamworkshopid="2775613786" gameversion="0.17.15.0">
+  <Item file="%ModDir%/dummyitem.xml" />
+  <Other file="%ModDir%/LICENSE" />
+  <Other file="%ModDir%/README.md" />
 </contentpackage>
