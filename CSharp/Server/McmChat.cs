@@ -12,7 +12,7 @@ namespace MultiplayerCrewManager {
         public McmChat(McmMod mod) {
             Mod = mod;
         }
-        
+
         private static readonly Regex rMaskGlobal = new Regex(@"^mcm.*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex rMaskHelp1 = new Regex(@"^mcm\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -109,7 +109,7 @@ admin only commands
                     }
                     else {
                         Mod.Manager.Set(sender, null);
-                        
+
                         response = "[MCM] Current character released";
                         messageType = ChatMessageType.Server;
                     }

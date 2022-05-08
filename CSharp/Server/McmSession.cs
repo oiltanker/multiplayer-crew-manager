@@ -34,7 +34,7 @@ namespace MultiplayerCrewManager {
 
             var characters = Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead).ToList();
             characters.ForEach(c => c.CheckTalents(AbilityEffectType.OnRoundEnd));
-            
+
             if (Session.Missions.Count()) {
                 var completedCount = Session.Missions.Where(m => m.Completed).Count();
 

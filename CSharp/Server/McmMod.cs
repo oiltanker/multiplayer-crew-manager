@@ -113,7 +113,7 @@ namespace MultiplayerCrewManager {
                     Save.OnLoadCampaign();
                     return null;
                 }, LuaCsHook.HookMethodType.After, this);
-            
+
             // init datas and clients, depending on campaign status
             GameMain.LuaCs.Hook.HookMethod("mcm_GameServer_StartGame",
                 typeof(GameServer).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).FirstOrDefault(m => m.Name == "StartGame" && m.GetParameters().Count() == 4),

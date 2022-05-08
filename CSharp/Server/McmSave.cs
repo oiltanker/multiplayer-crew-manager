@@ -38,7 +38,7 @@ namespace MultiplayerCrewManager {
             IsCampaignLoaded = false;
             IsNewCampaign = false;
         }
-        
+
         public void OnLoadCampaign() {
             if (!McmMod.IsCampaign) return;
 
@@ -49,7 +49,7 @@ namespace MultiplayerCrewManager {
         public void OnStartGame() {
             if (!McmMod.IsCampaign) return;
             if (!IsCampaignLoaded) OnLoadCampaign();
-            
+
             var crewManager = GameMain.GameSession.CrewManager;
             foreach(var ci in crewManager.GetCharacterInfos().ToArray()) crewManager.RemoveCharacterInfo(ci);
 
