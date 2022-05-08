@@ -154,7 +154,7 @@ namespace MultiplayerCrewManager {
                 Save.IsNewCampaign = false;
                 Control.Awaiting.Clear();
 
-                LuaCsTimer.Wait((args) => {
+                GameMain.LuaCs.Timer.Wait((args) => {
                     Manager.Clear();
                     ClientListUpadte();
                     UpdateAction = Update;

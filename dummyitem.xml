@@ -1,2 +1,3 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- makes mod mulpilayer incopatible? (basically to force load client c#, othervise it wont work on dedicated servers, or perhaps even remote servers) -->
-<Items></Items> 
+<Items></Items>

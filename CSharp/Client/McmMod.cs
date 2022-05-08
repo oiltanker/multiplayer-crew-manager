@@ -24,7 +24,7 @@ namespace MultiplayerCrewManager {
                 if (McmMod.IsCampaign) UpdateAction = OnCrewListUpdate;
                 return null;
             };
-            if (McmMod.IsRunning) LuaCsTimer.Wait((args) => clientInit(), 500);
+            if (McmMod.IsRunning) GameMain.LuaCs.Timer.Wait((args) => clientInit(), 500);
             GameMain.LuaCs.Hook.Add("roundStart", "mcm_ClientStop", (args) => clientInit(), this);
         }
         public void OnCrewListUpdate(GUIListBox crewList, object draggedElementData) {
