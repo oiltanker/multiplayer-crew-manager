@@ -19,7 +19,7 @@ namespace MultiplayerCrewManager {
         public void OnCampaignModeEnd(CampaignMode self)  {
             if (!McmMod.IsCampaign) return;
 
-            foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && c.IsDead)) {
+            foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && c.IsDead).ToArray()) {
                 character.DespawnNow(false);
                 Entity.Spawner.AddEntityToRemoveQueue(character);
             }

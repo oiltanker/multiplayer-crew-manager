@@ -28,6 +28,7 @@ namespace MultiplayerCrewManager {
         private static readonly Regex rMaskSpawn = new Regex(@"^mcm\s+spawn\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex rMaskClientAutospawn = new Regex(@"^mcm\s+client\s+autospawn\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskRespawn = new Regex(@"^mcm\s+respawn\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnSet = new Regex(@"^mcm\s+respawn\s+set\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnPenalty = new Regex(@"^mcm\s+respawn\s+penalty\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnDelay = new Regex(@"^mcm\s+respawn\s+delay\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -70,6 +71,7 @@ admin only commands
 — mcm spawn <ID> - spawn unique client character (his cosmetic presets)
 — mcm client autospawn <true/false> - trun automatic spawning for new connected clients on/off
 
+— mcm respawn - list respawn config
 — mcm respawn set <true/false> - trun respawning on/off
 — mcm respawn penalty <true/false> - trun respawning on/off
 — mcm respawn delay <number> - time to wait before respawning
@@ -226,6 +228,19 @@ admin only commands
                     response = $"[MCM] Respawn catch-up time is set to {time} seconds";
                     McmMod.Config.RespawnTime = (float)time;
                     McmMod.SaveConfig();
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskRespawn.IsMatch(message)) { // mcm respawn time <number>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    var confStr = new []{
+                        ("Client Autospawn", $"{McmMod.Config.AllowSpawnNewClients}"),
+                        ("Allow Respawns", $"{McmMod.Config.AllowRespawns}"),
+                        ("Penalty", $"{McmMod.Config.RespawnPenalty}"),
+                        ("Delay", $"{McmMod.Config.RespawnDelay}"),
+                        ("Time", $"{McmMod.Config.RespawnTime}"),
+                    }.Select(s => $"\n— {s.Item1}:    {s.Item2}").Aggregate((s1, s2) => $"{s1}{s2}");
+                    response = $"Respawn Config:{confStr}";
                 }
                 else setPrivilegeError();
             }

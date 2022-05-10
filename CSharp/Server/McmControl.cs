@@ -36,7 +36,7 @@ namespace MultiplayerCrewManager {
     }
 
     class McmControl {
-        private int counter = McmMod.Config.ServerUpdateFrequency;
+        private int counter = -1;
         private double respawnTimeBegin = 0; // from LuaCsTimer.Time
         private double respawnTimer = 0; // difference
         private double respawnTimerForce = 0;
@@ -174,7 +174,6 @@ namespace MultiplayerCrewManager {
             if (!McmMod.IsCampaign) return null;
             if (RespawnManager != self) RespawnManager = self;
 
-            if (!McmMod.IsCampaign) return null;
             if (McmMod.Config.AllowRespawns) {
                 counter--;
                 if (counter <= 0) {
