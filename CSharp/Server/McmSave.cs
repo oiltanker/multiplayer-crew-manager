@@ -90,8 +90,6 @@ namespace MultiplayerCrewManager {
             }
             crewManager.HasBots = true;
 
-            foreach(var ci in crewManager.GetCharacterInfos()) LuaCsSetup.PrintCsMessage($"  --==  {ci.ID} - {ci.Name}  {ci.Job}");
-
             // do not spawn clients
             foreach (var client in Client.ClientList) client.SpectateOnly = true;
         }

@@ -113,7 +113,7 @@ namespace MultiplayerCrewManager {
             }
 
             // dispatch respawn shuttle if needed
-            if (RespawnManager.RespawnShuttle != null && Level.IsLoadedOutpost) {
+            if (RespawnManager.RespawnShuttle != null && !Level.IsLoadedOutpost) {
                 var shuttle = RespawnManager.RespawnShuttle;
                 var shuttleSteering = Item.ItemList.FirstOrDefault(i => i.Submarine == shuttle)?.GetComponent<Steering>();
 
