@@ -42,6 +42,7 @@ namespace MultiplayerCrewManager {
         public void OnLoadCampaign() {
             if (!McmMod.IsCampaign) return;
 
+            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Loading multiplayer campaign");
             SavedPlayers = CharacterData.Where(c => c.ClientEndPoint == "PIPE").ToList();
             IsNewCampaign = SavedPlayers.Count <= 0;
             IsCampaignLoaded = true;

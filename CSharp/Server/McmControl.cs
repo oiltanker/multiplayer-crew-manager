@@ -36,7 +36,7 @@ namespace MultiplayerCrewManager {
     }
 
     class McmControl {
-        private int counter = -1;
+        private int counter = 0;
         private double respawnTimeBegin = 0; // from LuaCsTimer.Time
         private double respawnTimer = 0; // difference
         private double respawnTimerForce = 0;

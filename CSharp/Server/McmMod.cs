@@ -38,7 +38,76 @@ namespace MultiplayerCrewManager {
                 if (!McmMod.IsCampaign) return null;
                 return Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead).ToArray();
             }, this);
-            GameMain.LuaCs.Hook.HookMethod("mcm_Mission_GiveReward",
+
+            // networking
+            GameMain.LuaCs.Networking.Receive("server-mcm", (object[] args) => {
+                (IReadMessage msg, Client client) = (args[0] as IReadMessage, args[1] as Client);
+                Int32.TryParse(msg.ReadString(), out int characterID);
+                Control.TryGiveControl(client, characterID);
+            });
+
+
+            // hooks
+
+            // chat commands
+            GameMain.LuaCs.Hook.Add("chatMessage", "mcm_ServerCommand", (args) => Chat.OnChatMessage(args[0] as string, args[1] as Client), this);
+            // control loop
+            GameMain.LuaCs.Hook.Add("think", "mcm_ServerLoop", (args) => {
+                if (UpdateAction != null) UpdateAction();
+                return null;
+            }, this);
+
+            // loop stop
+            GameMain.LuaCs.Hook.Add("roundEnd", "mcm_ServerStop", (args) => {
+                UpdateAction = null;
+                Manager.Clear();
+                Save.IsNewCampaign = false;
+                McmSave.PipeIndex = 0;
+                Save.IsCampaignLoaded = false;
+                Control.Awaiting.Clear();
+                return null;
+            }, this);
+            // loop start
+            Action serverInit = () => {
+                if (!IsCampaign) return;
+
+                Save.IsNewCampaign = false;
+                Control.Awaiting.Clear();
+
+                GameMain.LuaCs.Timer.Wait((args) => {
+                    Manager.Clear();
+                    ClientListUpadte();
+                    UpdateAction = Update;
+                }, 500);
+            };
+            if (GameMain.GameSession?.IsRunning ?? false) serverInit();
+            GameMain.LuaCs.Hook.Add("roundStart", "mcm_ServerStart", (args) => {
+                serverInit();
+                Control.AssignAiCharacters();
+                return null;
+            }, this);
+
+            // client disconnect
+            GameMain.LuaCs.Hook.Add("clientDisconnected", "mcm_ServerDisconnect", (args) => {
+                Client client = args[0] as Client;
+                if (!IsCampaign) return null;
+                Manager.Set(client, null);
+                return null;
+            }, this);
+
+            //respawn
+            GameMain.LuaCs.Hook.Add("respawnManager.update", "mcm_RespawnManager_Update", (args) => {
+                Control.Update(GameMain.Server?.RespawnManager);
+                return true;
+            }, this);
+
+            // methos hooks
+            InitMethodHooks();
+        }
+
+        private void InitMethodHooks() {
+            // multiplayer bot talents & etc.
+             GameMain.LuaCs.Hook.HookMethod("mcm_Mission_GiveReward",
                 typeof(Mission).GetMethod("GiveReward"),
                 (object self, Dictionary<string, object> args) => Session.OnMissionGiveReward(self as Mission),
                 LuaCsHook.HookMethodType.Before, this);
@@ -52,18 +121,7 @@ namespace MultiplayerCrewManager {
                 typeof(PirateMission).GetMethod("InitPirates", BindingFlags.Instance | BindingFlags.NonPublic),
                 (object self, Dictionary<string, object> args) => Session.OnPirateMissionInitPirates(self as PirateMission),
                 LuaCsHook.HookMethodType.Before, this);
-
-
-            // networking
-            GameMain.LuaCs.Networking.Receive("server-mcm", (object[] args) => {
-                (IReadMessage msg, Client client) = (args[0] as IReadMessage, args[1] as Client);
-                Int32.TryParse(msg.ReadString(), out int characterID);
-                Control.TryGiveControl(client, characterID);
-            });
-
-
-            // hooks
-
+            
             // no round end with alive players
             GameMain.LuaCs.Hook.HookMethod("mcm_GameServer_Update",
                 typeof(GameServer).GetMethod("Update", new[] { typeof(System.Single) }),
@@ -129,56 +187,6 @@ namespace MultiplayerCrewManager {
                     Save.RestoreCharactersWallets();
                     return null;
                 }, LuaCsHook.HookMethodType.After, this);
-
-            // chat commands
-            GameMain.LuaCs.Hook.Add("chatMessage", "mcm_ServerCommand", (args) => Chat.OnChatMessage(args[0] as string, args[1] as Client), this);
-            // control loop
-            GameMain.LuaCs.Hook.Add("think", "mcm_ServerLoop", (args) => {
-                if (UpdateAction != null) UpdateAction();
-                return null;
-            }, this);
-
-            // loop stop
-            GameMain.LuaCs.Hook.Add("roundEnd", "mcm_ServerStop", (args) => {
-                UpdateAction = null;
-                Manager.Clear();
-                Save.IsNewCampaign = false;
-                McmSave.PipeIndex = 0;
-                Save.IsCampaignLoaded = false;
-                Control.Awaiting.Clear();
-                return null;
-            }, this);
-            // loop start
-            Action serverInit = () => {
-                if (!IsCampaign) return;
-                Save.IsNewCampaign = false;
-                Control.Awaiting.Clear();
-
-                GameMain.LuaCs.Timer.Wait((args) => {
-                    Manager.Clear();
-                    ClientListUpadte();
-                    UpdateAction = Update;
-                }, 500);
-            };
-            if (GameMain.GameSession?.IsRunning ?? false) serverInit();
-            GameMain.LuaCs.Hook.Add("roundStart", "mcm_ServerStart", (args) => {
-                serverInit();
-                Control.AssignAiCharacters();
-                return null;
-            }, this);
-
-            // respawning
-            GameMain.LuaCs.Hook.HookMethod("mcm_RespawnManager_Update",
-                typeof(RespawnManager).GetMethod("Update"),
-                (object self, Dictionary<string, object> args) => Control.Update(self as RespawnManager),
-                LuaCsHook.HookMethodType.Before, this);
-            // client disconnect
-            GameMain.LuaCs.Hook.Add("clientDisconnected", "mcm_ServerDisconnect", (args) => {
-                Client client = args[0] as Client;
-                if (!IsCampaign) return null;
-                Manager.Set(client, null);
-                return null;
-            }, this);
         }
 
         private int counter = -1;
