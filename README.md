@@ -7,8 +7,8 @@ Got only a few friends that you want to play Barotrauma with, but the Bots make 
 Multiplayer crew manager is a modification that makes Multiplayer Campaign play something more similar to the Singleplayer one, in terms that:
 
 * Directly controllable bot crew-mates (all crew members are AI controlled bots, that can be possessed by client player)
-* Crew information panel now handles clicks on crew members and requests control from the server ***(Full installation needed, see [Client-side lua installation](#Client-side-lua-installation))***
-* Server commands that allows more in-depth control of campaign (especially for server admins), just type in chat `mcm` or `mcm help`
+* Crew information panel now also used to switch between crew characters by clicking on them ***(Full installation needed, see [Client-side lua installation](#Client-side-lua-installation))***
+* Server ***CHAT*** commands that allows more in-depth control of campaign (especially for server admins), just type in chat `mcm` or `mcm help`
 * Can user `mcm release` to spectate, or for admins `mcm release <client_id>` to free characters from AFK players
 
 ## To keep in mind
@@ -19,6 +19,7 @@ Multiplayer crew manager is a modification that makes Multiplayer Campaign play 
 * Campaign most probably cannot be converted back, without manual editing *(xml file)*, or in-game shenanigans
 * Every bot, new hire and player is saved into `_CharacterData.xml`
 * Respawns are turned off by default, to turn them on use: `mcm respawn set true`
+* Respawn **delay** and **time** refers to timeout on first person dead and time to arrive to main sub on respawn shuttle.
 
 # Client-side lua installation
 
