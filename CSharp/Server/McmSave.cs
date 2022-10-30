@@ -43,7 +43,7 @@ namespace MultiplayerCrewManager {
             if (!McmMod.IsCampaign) return;
 
             LuaCsSetup.PrintCsMessage("[MCM-SERVER] Loading multiplayer campaign");
-            SavedPlayers = CharacterData.Where(c => c.ClientEndPoint == "PIPE").ToList();
+            SavedPlayers = CharacterData.Where(c => c.ClientAddress.ToString() == "PIPE").ToList();
             IsNewCampaign = SavedPlayers.Count <= 0;
             IsCampaignLoaded = true;
         }
@@ -107,8 +107,8 @@ namespace MultiplayerCrewManager {
             var dummyC = new Client(charInfo.Name, 127);
             dummyC.CharacterInfo = charInfo;
             dummyC.Character = character;
-            dummyC.Connection = new PipeConnection(0);
-            dummyC.SteamID = PipeIndex;
+            //dummyC.Connection = new PipeConnection(0);
+            //dummyC.SteamID = PipeIndex;
 
             return dummyC;
         }
@@ -174,7 +174,7 @@ namespace MultiplayerCrewManager {
             // remove actual new
             foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1)) {
                 // Team1, meaning default crew
-                CharacterData = CharacterData.Where(cd => cd.ClientEndPoint == "PIPE").ToList();
+                CharacterData = CharacterData.Where(cd => cd.ClientAddress.ToString() == "PIPE").ToList();
             }
         }
 

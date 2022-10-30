@@ -206,7 +206,7 @@ namespace MultiplayerCrewManager {
                 if (client.InGame && !client.SpectateOnly) {
                     // mark client in game registered
                     client.SpectateOnly = true;
-                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] New client - {client.ID} | '{client.Name}'");
+                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] New client - {client.CharacterID} | '{client.Name}'");
                     // if spawning is enabled then check if spawn is needed
                     if (McmMod.Config.AllowSpawnNewClients && client.InGame && client.Character == null) {
                         var character = Character.CharacterList.FirstOrDefault(c => c.TeamID == CharacterTeamType.Team1 && c.Name == client.Name);
