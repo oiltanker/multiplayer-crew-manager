@@ -44,6 +44,8 @@ namespace MultiplayerCrewManager {
 
             LuaCsSetup.PrintCsMessage("[MCM-SERVER] Loading multiplayer campaign");
             SavedPlayers = CharacterData.Where(c => c.ClientAddress.ToString() == "PIPE").ToList();
+            //Saved connections will have their enpoint represented by a new value "Hidden" - So we add all the "Hidden" connections to the list of saved players - this might cause som unintended bugs
+            SavedPlayers.AddRange(CharacterData.Where(c => c.ClientAddress.ToString() == "Hidden")); 
             IsNewCampaign = SavedPlayers.Count <= 0;
             IsCampaignLoaded = true;
         }
@@ -105,10 +107,17 @@ namespace MultiplayerCrewManager {
 
         public static Client CreateDummy(Character character, CharacterInfo charInfo) {
             var dummyC = new Client(charInfo.Name, 127);
+
+            //due to changes in LUA/CS base-lib we need to do some funky magic here to be able to create a new dummy client
+            var steamAcc = new Barotrauma.Networking.SteamId(pipeIndex);
+            var conn = new PipeConnection(steamAcc as AccountId);
+            dummyC.AccountInfo = new Barotrauma.Networking.AccountInfo(steamAcc);
+
             dummyC.CharacterInfo = charInfo;
             dummyC.Character = character;
-            //dummyC.Connection = new PipeConnection(0);
-            //dummyC.SteamID = PipeIndex;
+            dummyC.Connection = conn; //insert pipe connection here
+            
+            //dummyC.SteamID = PipeIndex; <-- this value can no longer be set like this since SteamID has become an exclusive "Get" property
 
             return dummyC;
         }
@@ -181,7 +190,7 @@ namespace MultiplayerCrewManager {
         public void RestoreCharactersWallets() {
             foreach(var charData in CharacterData) {
                 if (charData.WalletData != null) {
-                    var character = Character.CharacterList.FirstOrDefault(c => charData.CharacterInfo == c.Info);
+                    var character = Character.CharacterList.FirstOrDefault(c => charData.CharacterInfo.GetIdentifier() == c.Info.GetIdentifier());
                     if (character != null) {
                         character.Wallet = new Wallet(Option<Character>.Some(character), charData.WalletData);
                     }
