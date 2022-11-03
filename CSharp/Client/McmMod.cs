@@ -31,7 +31,7 @@ namespace MultiplayerCrewManager {
             if  (!crewList.HasDraggedElementIndexChanged) {
                 var character = draggedElementData as Character;
                 var msg = GameMain.LuaCs.Networking.Start("server-mcm");
-                msg.Write(character.ID.ToString());
+                msg.WriteString(character.ID.ToString());
                 GameMain.LuaCs.Networking.Send(msg);
             }
         }

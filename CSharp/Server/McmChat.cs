@@ -92,7 +92,7 @@ admin only commands
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     response = "Current clients";
                     foreach (var client in Client.ClientList)
-                        response += $"\n  {client.ID} | {client.SteamID} - {client.Name}";
+                        response += $"\n  {client.CharacterID} | {client.SteamID} - {client.Name}";
                 }
                 else setPrivilegeError();
             }
@@ -162,7 +162,7 @@ admin only commands
                         Int32.TryParse(rMaskIntValue.Match(message).Value, out int clientId);
 
                         messageType = ChatMessageType.Error;
-                        var client = Client.ClientList.FirstOrDefault(c => clientId == c.ID);
+                        var client = Client.ClientList.FirstOrDefault(c => clientId == c.Character.ID);
                         if (client != null) {
                             if (Mod.TryCeateClientCharacter(client)) {
                                 response = $"[MCM] Character spawned for client ID - {clientId}";

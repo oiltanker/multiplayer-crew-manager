@@ -234,7 +234,7 @@ namespace MultiplayerCrewManager {
 
         public void AssignAiCharacters() {
             // assign old
-            var clients = Client.ClientList.Where(c => c.Connection.EndPointString != "PIPE" && c.Character == null);
+            var clients = Client.ClientList.Where(c => c.Connection.Endpoint.ToString() != "PIPE" && c.Character == null);
             var unassigned = new Queue<Character>();
             foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1)) {
                 var client = clients.FirstOrDefault(c => c.Name == character.Name);
@@ -242,7 +242,7 @@ namespace MultiplayerCrewManager {
                 else unassigned.Enqueue(character);
             }
             // assign unassigned
-            clients = Client.ClientList.Where(c => c.Connection.EndPointString != "PIPE" && c.Character == null);
+            clients = Client.ClientList.Where(c => c.Connection.Endpoint.ToString() != "PIPE" && c.Character == null);
             foreach (var client in clients) {
                 if (unassigned.Count <= 0) break;
                 else ClientManager.Set(client, unassigned.Dequeue());

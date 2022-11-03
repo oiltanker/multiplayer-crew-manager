@@ -76,7 +76,7 @@ namespace MultiplayerCrewManager {
 
                 GameMain.LuaCs.Timer.Wait((args) => {
                     Manager.Clear();
-                    ClientListUpadte();
+                    ClientListUpdate();
                     UpdateAction = Update;
                 }, 500);
             };
@@ -107,8 +107,9 @@ namespace MultiplayerCrewManager {
 
         private void InitMethodHooks() {
             // multiplayer bot talents & etc.
-             GameMain.LuaCs.Hook.HookMethod("mcm_Mission_GiveReward",
-                typeof(Mission).GetMethod("GiveReward"),
+            //2022-11-02 Fixed bug where experience weren't rewarded to bots because the method "GiveReward" is now a private.
+            GameMain.LuaCs.Hook.HookMethod("mcm_Mission_GiveReward",
+                typeof(Mission).GetMethod("GiveReward", BindingFlags.NonPublic | BindingFlags.Instance), 
                 (object self, Dictionary<string, object> args) => Session.OnMissionGiveReward(self as Mission),
                 LuaCsHook.HookMethodType.Before, this);
             // money ... money ...
@@ -194,11 +195,11 @@ namespace MultiplayerCrewManager {
             counter--;
             if (counter <= 0) {
                 counter = McmMod.Config.ServerUpdateFrequency;
-                ClientListUpadte();
+                ClientListUpdate();
             }
         }
 
-        public void ClientListUpadte() {
+        public void ClientListUpdate() {
             var toBeCreated = new List<Client>();
             // update client control status
             foreach (var client in Client.ClientList) {
@@ -206,7 +207,7 @@ namespace MultiplayerCrewManager {
                 if (client.InGame && !client.SpectateOnly) {
                     // mark client in game registered
                     client.SpectateOnly = true;
-                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] New client - {client.ID} | '{client.Name}'");
+                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] New client - {client.CharacterID} | '{client.Name}'");
                     // if spawning is enabled then check if spawn is needed
                     if (McmMod.Config.AllowSpawnNewClients && client.InGame && client.Character == null) {
                         var character = Character.CharacterList.FirstOrDefault(c => c.TeamID == CharacterTeamType.Team1 && c.Name == client.Name);
