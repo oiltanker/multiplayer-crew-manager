@@ -95,7 +95,7 @@ namespace MultiplayerCrewManager {
             int experienceGain = (int)(baseExperienceGain * experienceGainMultiplier.Value);
             foreach (Character character in crewCharacters)
             {
-                character.Info?.GiveExperience(experienceGain, isMissionExperience: true);
+                character.Info?.GiveExperience(experienceGain);//, isMissionExperience: true);
             }
 
             // apply money gains afterwards to prevent them from affecting XP gains
