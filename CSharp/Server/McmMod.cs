@@ -7,12 +7,17 @@ using System.Collections.Generic;
 using System.Linq;
 using Barotrauma;
 using Barotrauma.Networking;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 
-namespace MultiplayerCrewManager {
-    partial class McmMod {
+namespace MultiplayerCrewManager
+{
+    partial class McmMod
+    {
         private GameServer server = GameMain.Server;
         private FieldInfo endRoundTimerFiled = typeof(GameServer).GetField("endRoundTimer", BindingFlags.Instance | BindingFlags.NonPublic);
-        private float endRoundTimer {
+        private float endRoundTimer
+        {
             get => (endRoundTimerFiled.GetValue(server) as float?).Value;
             set => endRoundTimerFiled.SetValue(server, value);
         }
@@ -22,9 +27,10 @@ namespace MultiplayerCrewManager {
         public McmControl Control { get; private set; }
         public McmSession Session { get; private set; }
         public McmSave Save { get; private set; }
-        public McmChat Chat { get; private set;}
+        public McmChat Chat { get; private set; }
 
-        public void InitServer() {
+        public void InitServer()
+        {
             LoadConfig();
 
             Manager = new McmClientManager();
@@ -34,13 +40,15 @@ namespace MultiplayerCrewManager {
             Chat = new McmChat(this);
 
             // multiplayer bot talents & etc.
-            GameMain.LuaCs.Hook.Add("getSessionCrewCharacters", "mcm_getSessionCrewCharacters", (object[] args) => {
+            GameMain.LuaCs.Hook.Add("getSessionCrewCharacters", "mcm_getSessionCrewCharacters", (object[] args) =>
+            {
                 if (!McmMod.IsCampaign) return null;
                 return Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead).ToArray();
             }, this);
 
             // networking
-            GameMain.LuaCs.Networking.Receive("server-mcm", (object[] args) => {
+            GameMain.LuaCs.Networking.Receive("server-mcm", (object[] args) =>
+            {
                 (IReadMessage msg, Client client) = (args[0] as IReadMessage, args[1] as Client);
                 Int32.TryParse(msg.ReadString(), out int characterID);
                 Control.TryGiveControl(client, characterID);
@@ -52,13 +60,15 @@ namespace MultiplayerCrewManager {
             // chat commands
             GameMain.LuaCs.Hook.Add("chatMessage", "mcm_ServerCommand", (args) => Chat.OnChatMessage(args[0] as string, args[1] as Client), this);
             // control loop
-            GameMain.LuaCs.Hook.Add("think", "mcm_ServerLoop", (args) => {
+            GameMain.LuaCs.Hook.Add("think", "mcm_ServerLoop", (args) =>
+            {
                 if (UpdateAction != null) UpdateAction();
                 return null;
             }, this);
 
             // loop stop
-            GameMain.LuaCs.Hook.Add("roundEnd", "mcm_ServerStop", (args) => {
+            GameMain.LuaCs.Hook.Add("roundEnd", "mcm_ServerStop", (args) =>
+            {
                 UpdateAction = null;
                 Manager.Clear();
                 Save.IsNewCampaign = false;
@@ -68,27 +78,31 @@ namespace MultiplayerCrewManager {
                 return null;
             }, this);
             // loop start
-            Action serverInit = () => {
+            Action serverInit = () =>
+            {
                 if (!IsCampaign) return;
 
                 Save.IsNewCampaign = false;
                 Control.Awaiting.Clear();
 
-                GameMain.LuaCs.Timer.Wait((args) => {
+                GameMain.LuaCs.Timer.Wait((args) =>
+                {
                     Manager.Clear();
                     ClientListUpdate();
                     UpdateAction = Update;
                 }, 500);
             };
             if (GameMain.GameSession?.IsRunning ?? false) serverInit();
-            GameMain.LuaCs.Hook.Add("roundStart", "mcm_ServerStart", (args) => {
+            GameMain.LuaCs.Hook.Add("roundStart", "mcm_ServerStart", (args) =>
+            {
                 serverInit();
                 Control.AssignAiCharacters();
                 return null;
             }, this);
 
             // client disconnect
-            GameMain.LuaCs.Hook.Add("clientDisconnected", "mcm_ServerDisconnect", (args) => {
+            GameMain.LuaCs.Hook.Add("clientDisconnected", "mcm_ServerDisconnect", (args) =>
+            {
                 Client client = args[0] as Client;
                 if (!IsCampaign) return null;
                 Manager.Set(client, null);
@@ -96,7 +110,8 @@ namespace MultiplayerCrewManager {
             }, this);
 
             //respawn
-            GameMain.LuaCs.Hook.Add("respawnManager.update", "mcm_RespawnManager_Update", (args) => {
+            GameMain.LuaCs.Hook.Add("respawnManager.update", "mcm_RespawnManager_Update", (args) =>
+            {
                 Control.Update(GameMain.Server?.RespawnManager);
                 return true;
             }, this);
@@ -105,111 +120,201 @@ namespace MultiplayerCrewManager {
             InitMethodHooks();
         }
 
-        private void InitMethodHooks() {
+        private void InitMethodHooks()
+        {
             // multiplayer bot talents & etc.
             //2022-11-02 Fixed bug where experience weren't rewarded to bots because the method "GiveReward" is now a private.
-            GameMain.LuaCs.Hook.HookMethod("mcm_Mission_GiveReward",
-                typeof(Mission).GetMethod("GiveReward", BindingFlags.NonPublic | BindingFlags.Instance), 
-                (object self, Dictionary<string, object> args) => Session.OnMissionGiveReward(self as Mission),
-                LuaCsHook.HookMethodType.Before, this);
-            // money ... money ...
-            GameMain.LuaCs.Hook.HookMethod("mcm_MoneyAction_Update",
-                typeof(MoneyAction).GetMethod("Update"),
-                (object self, Dictionary<string, object> args) => Session.OnMoneyActionUpdate(self as MoneyAction, (args["deltaTime"] as float?).Value),
-                LuaCsHook.HookMethodType.Before, this);
-            // pirate missions
-            GameMain.LuaCs.Hook.HookMethod("mcm_PirateMission_InitPirates",
-                typeof(PirateMission).GetMethod("InitPirates", BindingFlags.Instance | BindingFlags.NonPublic),
-                (object self, Dictionary<string, object> args) => Session.OnPirateMissionInitPirates(self as PirateMission),
-                LuaCsHook.HookMethodType.Before, this);
-            
-            // no round end with alive players
-            GameMain.LuaCs.Hook.HookMethod("mcm_GameServer_Update",
-                typeof(GameServer).GetMethod("Update", new[] { typeof(System.Single) }),
-                (object self, Dictionary<string, object> args) => {
-                    if (!McmMod.IsCampaign) return null;
+            //2023-02-03 switched out hook to new .Patch method //Akronyhm
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_Mission_GiveReward",
+                "Barotrauma.Mission",
+                "GiveReward",
+                new string[] { },
+                (instance, ptable) =>
+                {
+                    ptable.ReturnValue = Session.OnMissionGiveReward(instance as Mission);
+                    return null;
+                },
+                LuaCsHook.HookMethodType.Before);
 
-                    if ((self as GameServer) != server) server = self as GameServer;
-                    if (endRoundTimer > 0.0f) {
-                        if (Character.CharacterList.Any(c => c.TeamID == CharacterTeamType.Team1 && !(c.IsDead || c.IsIncapacitated)))
+            // money ... money ...
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_MoneyAction_Update",
+                "Barotrauma.MoneyAction",
+                "Update",
+                new string[] { "System.Single" },
+                (instance, ptable) =>
+                {
+                    Session.OnMoneyActionUpdate(instance as MoneyAction, (float)ptable["deltaTime"]);
+                    return null;
+                },
+                LuaCsHook.HookMethodType.Before);
+
+            // pirate missions
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_PirateMission_InitPirates",
+                "Barotrauma.PirateMission",
+                "InitPirates",
+                new string[] { },
+                (instance, ptable) =>
+                {
+                    Session.OnPirateMissionInitPirates(instance as PirateMission);
+                    return null;
+                },
+                LuaCsHook.HookMethodType.Before);
+
+            // no round end with alive players
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_GameServer_Update",
+                "Barotrauma.Networking.GameServer",
+                "Update",
+                new string[] { "System.Single" },
+                (instance, ptable) =>
+                {
+                    if (!McmMod.IsCampaign)
+                        return null;
+
+                    if ((instance as GameServer) != server)
+                        server = instance as GameServer;
+
+                    if (endRoundTimer > 0.0f)
+                    {
+                        if (Character.CharacterList.Any(c => c.TeamID == CharacterTeamType.Team1 && !(c.IsDead || !c.IsIncapacitated)))
                             endRoundTimer = -5.0f;
-                        else if (endRoundTimer < 0.0f) endRoundTimer = 0.0f;
+                        else if (endRoundTimer < 0.0f)
+                            endRoundTimer = 0.0f;
                     }
                     return null;
                 },
-                LuaCsHook.HookMethodType.After, this);
+                LuaCsHook.HookMethodType.After);
+
             // cleanup dead crew bodies
-            GameMain.LuaCs.Hook.HookMethod("mcm_CampaignMode_End",
-                typeof(CampaignMode).GetMethod("End"),
-                (object self, Dictionary<string, object> args) => {
-                    Session.OnCampaignModeEnd(self as CampaignMode);
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_CampaignMode_End",
+                "Barotrauma.CampaignMode",
+                "End",
+                new string[] { "Barotrauma.CampaignMode+TransitionType" },
+                (instance, ptable) =>
+                {
+                    Session.OnCampaignModeEnd(instance as CampaignMode);
                     return null;
-                }, LuaCsHook.HookMethodType.Before, this);
+                },
+                LuaCsHook.HookMethodType.Before);
 
             // do not save bots, saved in CharacterData under PIPE
-            GameMain.LuaCs.Hook.HookMethod("mcm_CrewManager_SaveMultiplayer",
-                typeof(CrewManager).GetMethod("SaveMultiplayer"), 
-                (object self, Dictionary<string, object> args) => Save.OnSaveMultiplayer(self as CrewManager, args["root"] as XElement),
-                LuaCsHook.HookMethodType.Before, this);
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_CrewManager_SaveMultiplayer",
+                "Barotrauma.CrewManager",
+                "SaveMultiplayer",
+                new string[] { "System.Xml.Linq.XElement" },
+                (instance, ptable) =>
+                {
+                    ptable.PreventExecution = true;
+                    ptable.ReturnValue = McmSave.OnSaveMultiplayer(instance as CrewManager, ptable["parentElement"] as XElement);
+                    return null;
+                },
+                LuaCsHook.HookMethodType.Before);
+
             // hook to save only existing players/bots
-            GameMain.LuaCs.Hook.HookMethod("mcm_MultiPlayerCampaign_SavePlayers",
-                typeof(MultiPlayerCampaign).GetMethod("SavePlayers"),
-                (object self, Dictionary<string, object> args) => {
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_MultiPlayerCampaign_SavePlayers_Before",
+                "Barotrauma.MultiPlayerCampaign",
+                "SavePlayers",
+                new string[] { },
+                (instance, ptable) =>
+                {
                     Save.OnBeforeSavePlayers();
                     return null;
-                }, LuaCsHook.HookMethodType.Before, this);
+                },
+                LuaCsHook.HookMethodType.Before);
+
             // hook to remove new 'wrong' clients, saved under PIPE
-            GameMain.LuaCs.Hook.HookMethod("mcm_MultiPlayerCampaign_SavePlayers",
-                typeof(MultiPlayerCampaign).GetMethod("SavePlayers"),
-                (object self, Dictionary<string, object> args) => {
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_MultiPlayerCampaign_SavePlayers_After",
+                "Barotrauma.MultiPlayerCampaign",
+                "SavePlayers",
+                new string[] { },
+                (instance, ptable) =>
+                {
                     Save.OnAfterSavePlayers();
                     return null;
-                }, LuaCsHook.HookMethodType.After, this);
+                },
+                LuaCsHook.HookMethodType.After);
+
+
             // load campaign status
-            GameMain.LuaCs.Hook.HookMethod("mcm_MultiPlayerCampaign_LoadCampaign",
-                typeof(MultiPlayerCampaign).GetMethod("LoadCampaign"),
-                (object self, Dictionary<string, object> args) => {
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_MultiPlayerCampaign_LoadCampaign",
+                "Barotrauma.MultiPlayerCampaign",
+                "LoadCampaign",
+                new string[] { "System.String" },
+                (instance, ptable) =>
+                {
                     Save.OnLoadCampaign();
                     return null;
-                }, LuaCsHook.HookMethodType.After, this);
+                },
+                LuaCsHook.HookMethodType.After);
 
             // init datas and clients, depending on campaign status
-            GameMain.LuaCs.Hook.HookMethod("mcm_GameServer_StartGame",
-                typeof(GameServer).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).FirstOrDefault(m => m.Name == "StartGame" && m.GetParameters().Count() == 4),
-                (object self, Dictionary<string, object> args) => {
+            GameMain.LuaCs.Hook.Patch(
+                "mcm_GameServer_StartGame",
+                "Barotrauma.Networking.GameServer",
+                "StartGame",
+                new string[] 
+                {
+                    "Barotrauma.SubmarineInfo",
+                    "Barotrauma.SubmarineInfo",
+                    "Barotrauma.GameModePreset",
+                    "Barotrauma.CampaignSettings"
+                },
+                (instance, ptable) =>
+                {
                     Save.OnStartGame();
                     return null;
-                }, LuaCsHook.HookMethodType.Before, this);
+                },
+                LuaCsHook.HookMethodType.After);
+
             // add player exp
-            GameMain.LuaCs.Hook.HookMethod("mcm_CrewManager_InitRound",
-                typeof(CrewManager).GetMethod("InitRound"),
-                (object self, Dictionary<string, object> args) => {
-                    Control.OnInitRound(self as CrewManager);
-                    Save.RestoreCharactersWallets();
-                    return null;
-                }, LuaCsHook.HookMethodType.After, this);
+            GameMain.LuaCs.Hook.Patch(
+               "mcm_CrewManager_InitRound",
+               "Barotrauma.CrewManager",
+               "InitRound",
+               new string[] { },
+               (instance, ptable) =>
+               {
+                   Control.OnInitRound(instance as CrewManager);
+                   Save.RestoreCharactersWallets();
+                   return null;
+               },
+               LuaCsHook.HookMethodType.After);
         }
 
         private int counter = -1;
-        public void Update() {
+        public void Update()
+        {
             counter--;
-            if (counter <= 0) {
+            if (counter <= 0)
+            {
                 counter = McmMod.Config.ServerUpdateFrequency;
                 ClientListUpdate();
             }
         }
 
-        public void ClientListUpdate() {
+        public void ClientListUpdate()
+        {
             var toBeCreated = new List<Client>();
             // update client control status
-            foreach (var client in Client.ClientList) {
+            foreach (var client in Client.ClientList)
+            {
                 Manager.Set(client, client.Character);
-                if (client.InGame && !client.SpectateOnly) {
+                if (client.InGame && !client.SpectateOnly)
+                {
                     // mark client in game registered
                     client.SpectateOnly = true;
                     LuaCsSetup.PrintCsMessage($"[MCM-SEVER] New client - {client.CharacterID} | '{client.Name}'");
                     // if spawning is enabled then check if spawn is needed
-                    if (McmMod.Config.AllowSpawnNewClients && client.InGame && client.Character == null) {
+                    if (McmMod.Config.AllowSpawnNewClients && client.InGame && client.Character == null)
+                    {
                         var character = Character.CharacterList.FirstOrDefault(c => c.TeamID == CharacterTeamType.Team1 && c.Name == client.Name);
                         if (character != null && !Manager.IsCurrentlyControlled(character)) Manager.Set(client, character);
                         else toBeCreated.Add(client);
@@ -217,36 +322,99 @@ namespace MultiplayerCrewManager {
                 }
             }
             // spawn pending clients if any or is allowed
-            toBeCreated.ForEach(c => TryCeateClientCharacter(c));
+            TryCreateClientCharacters(toBeCreated);
+            //toBeCreated.ForEach(c => TryCeateClientCharacter(c));
         }
 
-        public bool TryCeateClientCharacter(Client client) {
+        public bool TryCeateClientCharacter(Client client)
+        {
+            return TryCreateClientCharacters(new List<Client> { client });
+        }
+
+        public bool TryCreateClientCharacters(List<Client> clients)
+        {
+            bool success = true;
             var crewManager = GameMain.GameSession?.CrewManager;
+            var subSpawnPoints = WayPoint.WayPointList.FindAll(w =>
+                        w.SpawnType == SpawnType.Human &&
+                        w.Submarine == Submarine.MainSub &&
+                        w.CurrentHull != null);
 
-            // fix client char info
-            if (client.CharacterInfo == null) client.CharacterInfo = new CharacterInfo("human", client.Name);
+            var jobAssignedSpawnPoints = subSpawnPoints.FindAll(w => w.AssignedJob != null);
+            var anyAssignedSpawnPoints = subSpawnPoints.FindAll(w => w.AssignedJob == null);
 
-            crewManager.AddCharacterInfo(client.CharacterInfo);
-            client.AssignedJob = client.JobPreferences[0];
-            client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
+            var availableJobSpawnPoints = new List<Barotrauma.WayPoint>(jobAssignedSpawnPoints);
+            var availableAnySpawnPoints = new List<Barotrauma.WayPoint>(anyAssignedSpawnPoints);
 
-            // find waypoint
-            var waypoint = WayPoint.WayPointList.Where(w =>
-                    w.SpawnType == SpawnType.Human &&
-                    w.Submarine == Submarine.MainSub &&
-                    w.CurrentHull != null
-                ).FirstOrDefault(w => client.CharacterInfo.Job.Prefab == w.AssignedJob);
-            if (waypoint == null) return false;
+            foreach (var client in clients)
+            {
+                // fix client char info
+                if (client.CharacterInfo == null) client.CharacterInfo = new CharacterInfo("human", client.Name);
 
-            // spawn character
-            client.CharacterInfo.TeamID = CharacterTeamType.Team1;
-            var character = Character.Create(client.CharacterInfo, waypoint.WorldPosition, client.CharacterInfo.Name, Entity.NullEntityID, true, true);
-            crewManager.AddCharacter(character);
+                crewManager.AddCharacterInfo(client.CharacterInfo);
+                client.AssignedJob = client.JobPreferences[0];
+                client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
 
-            Manager.Set(client, character);
-            character.GiveJobItems(waypoint);
+                //Setting a waypoint
+                Barotrauma.WayPoint waypoint = null;
+                //Does client job have a specific spawn point?
+                if (subSpawnPoints.Any(w => w.AssignedJob == client.CharacterInfo.Job.Prefab))
+                {
+                    waypoint = availableJobSpawnPoints.FirstOrDefault(w => w.AssignedJob == client.CharacterInfo.Job.Prefab);
+                    if (waypoint == null) //No unique spawn point available anymore - pick one at random
+                    {
+                        waypoint = jobAssignedSpawnPoints[Rand.Int(jobAssignedSpawnPoints.Count, Rand.RandSync.ServerAndClient)];
+                    }
+                    else
+                    {
+                        availableJobSpawnPoints.Remove(waypoint);
+                    }
+                }
+                else //no spawn point exists for clients job
+                {
+                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] Client [{client.Name}] has a job [{client.AssignedJob.Prefab.Name}] That does not have a dedicated spawn point");
+                    if (anyAssignedSpawnPoints.Count == 0) //this sub does not have any "Any" spawnpoints
+                    {
+                        //Fail-Over... Pick any random job spawnpoint
+                        waypoint = subSpawnPoints.FirstOrDefault();
+                    }
+                    else
+                    {
+                        if (availableAnySpawnPoints.Count == 0) //No unique spawn locations available anymore - pick one at random
+                        {
+                            waypoint = anyAssignedSpawnPoints[Rand.Int(anyAssignedSpawnPoints.Count, Rand.RandSync.ServerAndClient)];
+                        }
+                        else
+                        {
+                            waypoint = availableAnySpawnPoints.FirstOrDefault();
+                            availableAnySpawnPoints.Remove(waypoint);
+                        }
+                    }
+                }
 
-            return true;
+                if (waypoint == null)
+                {
+                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] Failure attempting to create character for client [{client.Name}] - No spawn point found for job [{client.AssignedJob.Prefab.Name}]. Picking another job spawnpoint at random");
+                    var failover = subSpawnPoints[Rand.Int(subSpawnPoints.Count, Rand.RandSync.ServerAndClient)];
+                    if (failover == null)
+                    {
+                        LuaCsSetup.PrintCsMessage($"[MCM-SEVER] Unable to fail-over - Aborting");
+                        return false;
+                    }
+                    waypoint = failover;
+                    success = false;
+                }
+
+                // spawn character
+                client.CharacterInfo.TeamID = CharacterTeamType.Team1;
+                var character = Character.Create(client.CharacterInfo, waypoint.WorldPosition, client.CharacterInfo.Name, Entity.NullEntityID, true, true);
+                crewManager.AddCharacter(character);
+
+                Manager.Set(client, character);
+                character.GiveJobItems(waypoint);
+            }
+
+            return success;
         }
     }
 }

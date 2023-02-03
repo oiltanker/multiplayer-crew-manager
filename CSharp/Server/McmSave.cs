@@ -6,6 +6,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Barotrauma;
 using Barotrauma.Networking;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MultiplayerCrewManager {
     class McmSave {
@@ -97,12 +98,12 @@ namespace MultiplayerCrewManager {
             foreach (var client in Client.ClientList) client.SpectateOnly = true;
         }
 
-        public bool OnSaveMultiplayer(CrewManager self, XElement root) {
+        public static XElement OnSaveMultiplayer(CrewManager self, XElement root)
+        {
             LuaCsSetup.PrintCsMessage("[MCM-SERVER] Saving multiplayer campaign");
             var saveElement = new XElement("bots", new XAttribute("hasbots", self.HasBots));
-            root.Add(saveElement);
-
-            return true;
+            root?.Add(saveElement);
+            return saveElement;
         }
 
         public static Client CreateDummy(Character character, CharacterInfo charInfo) {
