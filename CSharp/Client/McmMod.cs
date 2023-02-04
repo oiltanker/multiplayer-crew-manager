@@ -8,6 +8,7 @@ namespace MultiplayerCrewManager {
     partial class McmMod {
         protected Action<GUIListBox, object> UpdateAction = null;
         public void InitClient() {
+            LuaCsSetup.PrintCsMessage("[MCM-CLIENT] Initializing...");
             GameMain.LuaCs.Hook.HookMethod("mcm_CrewManager_OnCrewListRearranged",
                 typeof(CrewManager).GetMethod("OnCrewListRearranged", BindingFlags.Instance | BindingFlags.NonPublic),
                 (object self, Dictionary<string, object> args) => {
@@ -26,6 +27,7 @@ namespace MultiplayerCrewManager {
             };
             if (McmMod.IsRunning) GameMain.LuaCs.Timer.Wait((args) => clientInit(), 500);
             GameMain.LuaCs.Hook.Add("roundStart", "mcm_ClientStop", (args) => clientInit(), this);
+            LuaCsSetup.PrintCsMessage("[MCM-CLIENT] Initialization complete");
         }
         public void OnCrewListUpdate(GUIListBox crewList, object draggedElementData) {
             if  (!crewList.HasDraggedElementIndexChanged) {

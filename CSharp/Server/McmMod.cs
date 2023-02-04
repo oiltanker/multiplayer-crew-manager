@@ -1,4 +1,3 @@
-using System.Reflection.PortableExecutable;
 using System.Diagnostics;
 using System.Xml.Linq;
 using System;
@@ -31,6 +30,7 @@ namespace MultiplayerCrewManager
 
         public void InitServer()
         {
+            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Initializing...");
             LoadConfig();
 
             Manager = new McmClientManager();
@@ -118,6 +118,7 @@ namespace MultiplayerCrewManager
 
             // methos hooks
             InitMethodHooks();
+            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Initialization complete");
         }
 
         private void InitMethodHooks()
