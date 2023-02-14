@@ -124,19 +124,7 @@ namespace MultiplayerCrewManager
         private void InitMethodHooks()
         {
             // multiplayer bot talents & etc.
-            //2022-11-02 Fixed bug where experience weren't rewarded to bots because the method "GiveReward" is now a private.
-            //2023-02-03 switched out hook to new .Patch method //Akronyhm
-            GameMain.LuaCs.Hook.Patch(
-                "mcm_Mission_GiveReward",
-                "Barotrauma.Mission",
-                "GiveReward",
-                new string[] { },
-                (instance, ptable) =>
-                {
-                    ptable.ReturnValue = Session.OnMissionGiveReward(instance as Mission);
-                    return null;
-                },
-                LuaCsHook.HookMethodType.Before);
+            //2023-02-13 Methodhook removed. V1.0 pre-patch adds levelable bots and mission rewards can now be handled by base game
 
             // money ... money ...
             GameMain.LuaCs.Hook.Patch(
@@ -146,7 +134,11 @@ namespace MultiplayerCrewManager
                 new string[] { "System.Single" },
                 (instance, ptable) =>
                 {
-                    Session.OnMoneyActionUpdate(instance as MoneyAction, (float)ptable["deltaTime"]);
+                    object returnvalue = Session.OnMoneyActionUpdate(instance as MoneyAction, (float)ptable["deltaTime"]);
+                    if (returnvalue is null)
+                        ptable.PreventExecution = false;
+                    else
+                        ptable.PreventExecution = true;
                     return null;
                 },
                 LuaCsHook.HookMethodType.Before);
@@ -159,7 +151,11 @@ namespace MultiplayerCrewManager
                 new string[] { },
                 (instance, ptable) =>
                 {
-                    Session.OnPirateMissionInitPirates(instance as PirateMission);
+                    object returnvalue = Session.OnPirateMissionInitPirates(instance as PirateMission);
+                    if (returnvalue is null)
+                        ptable.PreventExecution = false;
+                    else
+                        ptable.PreventExecution = true;
                     return null;
                 },
                 LuaCsHook.HookMethodType.Before);
@@ -261,7 +257,7 @@ namespace MultiplayerCrewManager
                 "mcm_GameServer_StartGame",
                 "Barotrauma.Networking.GameServer",
                 "StartGame",
-                new string[] 
+                new string[]
                 {
                     "Barotrauma.SubmarineInfo",
                     "Barotrauma.SubmarineInfo",
@@ -288,6 +284,23 @@ namespace MultiplayerCrewManager
                    return null;
                },
                LuaCsHook.HookMethodType.After);
+
+            //Pre-cursor to help with creating a new character
+            //GameMain.LuaCs.Hook.Patch(
+            //    "mcm_GameMain_OnCreateNewCharacter",
+            //    "Barotrauma.Networking.GameServer",
+            //    "UpdateCharacterInfo",
+            //    new string[] { "Barotrauma.Networking.IReadMessage", "Barotrauma.Networking.Client" },
+            //    (instance, ptable) =>
+            //    {
+            //        //TODO Capture event and somehow integrate it into the mod so that we are able to create new characters
+            //        IReadMessage message = (Barotrauma.Networking.IReadMessage)ptable["message"];
+            //        Barotrauma.Networking.ClientPacketHeader header = (Barotrauma.Networking.ClientPacketHeader)message.Buffer[0];
+            //        if (header == Barotrauma.Networking.ClientPacketHeader.UPDATE_CHARACTERINFO)
+            //            LuaCsSetup.PrintCsMessage($"[MCM-DEBUG] Client created new character");
+            //        return null;
+            //    },
+            //    LuaCsHook.HookMethodType.After);
         }
 
         private int counter = -1;
