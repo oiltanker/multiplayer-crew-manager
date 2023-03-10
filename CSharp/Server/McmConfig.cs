@@ -7,6 +7,7 @@ namespace MultiplayerCrewManager {
             public int ServerUpdateFrequency = 15;
             public bool AllowSpawnNewClients = false;
             public bool AllowRespawns = false;
+            public bool SecureEnabled = false;
             public bool RespawnPenalty = true;
             public float RespawnTime = 180;
             public float RespawnDelay = 5;

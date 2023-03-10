@@ -194,14 +194,14 @@ namespace MultiplayerCrewManager {
             }
         }
 
-        public void TryGiveControl(Client client, int charId) {
+        public void TryGiveControl(Client client, int charId, bool secure) {
             var character = Character.CharacterList.FirstOrDefault(c => charId == c.ID && c.TeamID == CharacterTeamType.Team1); // Team1, meaning default crew
             ChatMessage cm = null;
 
             if (character == null) {
                 // character with provided ID not found => send client FAIL
                 cm = ChatMessage.Create("[Server]",
-                    $"Failed to gain control: Character ID [{charId}] not found",
+                    $"[MCM] Failed to gain control: Character ID [{charId}] not found",
                     ChatMessageType.Error, null, client);
 			    cm.IconStyle = "StoreShoppingCrateIcon";
 
@@ -213,11 +213,22 @@ namespace MultiplayerCrewManager {
             if (ClientManager.IsCurrentlyControlled(character)) {
                 // if is busy => send client FAIL
                 cm = ChatMessage.Create("[Server]",
-                    $"Failed to gain control: '{character.DisplayName}' is already in use",
+                    $"[MCM] Failed to gain control: '{character.DisplayName}' is already in use",
                     ChatMessageType.Error, null, client);
 			    cm.IconStyle = "StoreShoppingCrateIcon";
 
 			    GameMain.Server.SendDirectChatMessage(cm, client);
+                return;
+            }
+
+            if (secure == true && !client.HasPermission(ClientPermissions.ConsoleCommands)) {
+                // secure mode is enabled and client nor an admin nor moder => send client FAIL
+                cm = ChatMessage.Create("[Server]",
+                    $"[MCM] Failed to gain control: secure mode is enabled. Only admins or moderators can gain control (provided that permission presets still on default)",
+                    ChatMessageType.Error, null, client);
+                cm.IconStyle = "StoreShoppingCrateIcon";
+
+                GameMain.Server.SendDirectChatMessage(cm, client);
                 return;
             }
 
@@ -226,7 +237,7 @@ namespace MultiplayerCrewManager {
 
             // send client OK
             cm = ChatMessage.Create("[Server]",
-                $"Gained control of '{character.DisplayName}'",
+                $"[MCM] Gained control of '{character.DisplayName}'",
                 ChatMessageType.Server, null, client);
             cm.IconStyle = "StoreShoppingCrateIcon";
             GameMain.Server.SendDirectChatMessage(cm, client);
