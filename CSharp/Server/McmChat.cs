@@ -33,6 +33,9 @@ namespace MultiplayerCrewManager {
         private static readonly Regex rMaskRespawnPenalty = new Regex(@"^mcm\s+respawn\s+penalty\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnDelay = new Regex(@"^mcm\s+respawn\s+delay\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnTime = new Regex(@"^mcm\s+respawn\s+time\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskSecure = new Regex(@"^mcm\s+secure\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskSecureEnabled = new Regex(@"^mcm\s+secure\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        
 
         private static readonly Regex rMaskIntValue = new Regex(@"\s\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskBoolValue = new Regex(@"\strue\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -59,12 +62,12 @@ mcm [function] [args] - mcm Function syntax
 
 — mcm [help] - show help for mcm function (help keyword is optional)
 — mcm list - list all controllable characters
-— mcm control <ID> - try gain control of character with provided ID
-— mcm release [ID] - relese currently controlled character or character with ID, if provided (latter only for admin)
+— mcm control <ID> - try gain control of character with provided ID (only for admins/moderators if SM enabled)
+— mcm release [ID] - release currently controlled character or character with ID, if provided (later only for admins/moderators)
 ";
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) response += @"
 
-admin only commands
+admin/moderator only commands
 
 — mcm delete <ID> - delete character (with inventory) with provided ID
 — mcm clientlist - list all the clients
@@ -73,9 +76,11 @@ admin only commands
 
 — mcm respawn - list respawn config
 — mcm respawn set <true/false> - trun respawning on/off
-— mcm respawn penalty <true/false> - trun respawning on/off
+— mcm respawn penalty <true/false> - trun respawning penalty on/off
 — mcm respawn delay <number> - time to wait before respawning
 — mcm respawn time <number> - time that respawnees have to catch up with the main sub
+— mcm secure - show the current secure mode status
+— mcm secure <true/false> - secure mode to allow only admins/moderators to gain control on/off
 ";
             }
             else if (rMaskList.IsMatch(message)) { // mcm list
@@ -99,7 +104,7 @@ admin only commands
             else if (rMaskControl.IsMatch(message)) { // mcm control <ID>
                 if (isInGame) {
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int id);
-                    Mod.Control.TryGiveControl(sender, id);
+                    Mod.Control.TryGiveControl(sender, id, McmMod.Config.SecureEnabled);
                 }
                 else setInGameError();
             }
@@ -111,7 +116,6 @@ admin only commands
                     }
                     else {
                         Mod.Manager.Set(sender, null);
-
                         response = "[MCM] Current character released";
                         messageType = ChatMessageType.Server;
                     }
@@ -241,6 +245,26 @@ admin only commands
                         ("Time", $"{McmMod.Config.RespawnTime}"),
                     }.Select(s => $"\n— {s.Item1}:    {s.Item2}").Aggregate((s1, s2) => $"{s1}{s2}");
                     response = $"Respawn Config:{confStr}";
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskSecure.IsMatch(message)) { // mcm secure
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    var confStr = new []{
+                        ("Secure Mode", $"{McmMod.Config.SecureEnabled}")
+                    }.Select(s => $"\n— {s.Item1}:    {s.Item2}").Aggregate((s1, s2) => $"{s1}{s2}");
+                    response = $"Secure Mode:{confStr}";
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskSecureEnabled.IsMatch(message)) { // mcm secure <true/false>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    messageType = ChatMessageType.Server;
+                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
+                    if (value) response = "[MCM] Secure mode is turned ON";
+                    else response = "[MCM] Secure mode is turned OFF";
+                    McmMod.Config.SecureEnabled = value;
+                    McmMod.SaveConfig();
                 }
                 else setPrivilegeError();
             }

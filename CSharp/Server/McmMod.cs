@@ -51,7 +51,7 @@ namespace MultiplayerCrewManager
             {
                 (IReadMessage msg, Client client) = (args[0] as IReadMessage, args[1] as Client);
                 Int32.TryParse(msg.ReadString(), out int characterID);
-                Control.TryGiveControl(client, characterID);
+                Control.TryGiveControl(client, characterID, McmMod.Config.SecureEnabled);
             });
 
 
