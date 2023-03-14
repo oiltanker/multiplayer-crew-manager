@@ -10,6 +10,7 @@ Multiplayer crew manager is a modification that makes Multiplayer Campaign play 
 * Crew information panel now also used to switch between crew characters by clicking on them ***(Full installation needed, see [Client-side lua installation](#Client-side-lua-installation))***
 * Server ***CHAT*** commands that allows more in-depth control of campaign (especially for server admins), just type in chat `mcm` or `mcm help`
 * Can user `mcm release` to spectate, or for admins `mcm release <client_id>` to free characters from AFK players
+* Enable secure mode if you playing with unfamiliar players to prevent them to gain control between the characters and ruin the game
 
 ## To keep in mind
 
@@ -20,6 +21,7 @@ Multiplayer crew manager is a modification that makes Multiplayer Campaign play 
 * Every bot, new hire and player is saved into `_CharacterData.xml`
 * Respawns are turned off by default, to turn them on use: `mcm respawn set true`
 * Respawn **delay** and **time** refers to timeout on first person dead and time to arrive to main sub on respawn shuttle.
+* Secure mode is disabled by default. Use `mcm secure` and `mcm secure true/false` to check and toggle it.
 
 # Client-side lua installation
 
@@ -76,6 +78,9 @@ Steam 创意工坊：https://steamcommunity.com/sharedfiles/filedetails/?id=2775
 * `mcm respawn penalty <true/false>` — 打开或关闭***重生惩罚***。
 * `mcm respawn delay <整数/秒>` — 重生前的***等待时间***
 * `mcm respawn time <整数/秒>` — 提供给***复活飞船与潜艇对接的时间***
+
+* `mcm secure` — 显示当前安全模式状态
+* `mcm secure` <true/false> — 安全模式只允许管理员/版主获得开/关控制权
 
 ## 注意事项
 
