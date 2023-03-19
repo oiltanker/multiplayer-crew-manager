@@ -35,7 +35,9 @@ namespace MultiplayerCrewManager {
         private static readonly Regex rMaskRespawnTime = new Regex(@"^mcm\s+respawn\s+time\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskSecure = new Regex(@"^mcm\s+secure\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskSecureEnabled = new Regex(@"^mcm\s+secure\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        
+        private static readonly Regex rMaskReserve = new Regex(@"^mcm\s+reserve\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskReservePut = new Regex(@"^mcm\s+reserve\s+put\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskReserveGet = new Regex(@"^mcm\s+reserve\s+get\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex rMaskIntValue = new Regex(@"\s\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskBoolValue = new Regex(@"\strue\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -79,8 +81,13 @@ admin/moderator only commands
 — mcm respawn penalty <true/false> - trun respawning penalty on/off
 — mcm respawn delay <number> - time to wait before respawning
 — mcm respawn time <number> - time that respawnees have to catch up with the main sub
+
 — mcm secure - show the current secure mode status
 — mcm secure <true/false> - secure mode to allow only admins/moderators to gain control on/off
+
+- mcm reserve - show characters stocked in reserve
+- mcm reserve put <ID> - put character (with inventory) in reserve with provided ID
+- mcm reserve get <ID> - get character (with inventory) from reserve with provided ID
 ";
             }
             else if (rMaskList.IsMatch(message)) { // mcm list
@@ -265,6 +272,30 @@ admin/moderator only commands
                     else response = "[MCM] Secure mode is turned OFF";
                     McmMod.Config.SecureEnabled = value;
                     McmMod.SaveConfig();
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskReserve.IsMatch(message)) { // mcm reserve
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    messageType = ChatMessageType.Server;
+                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
+                    //TODO place reserve logic here
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskReservePut.IsMatch(message)) { // mcm reserve put <ID>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    messageType = ChatMessageType.Server;
+                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
+                    //TODO place reserve put logic here
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskReserveGet.IsMatch(message)) { // mcm reserve get <ID>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    messageType = ChatMessageType.Server;
+                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
+                    //TODO place reserve get logic here
                 }
                 else setPrivilegeError();
             }
