@@ -111,8 +111,7 @@ admin/moderator only commands
             else if (rMaskControl.IsMatch(message)) { // mcm control <ID>
                 if (isInGame) {
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int id);
-                    // Mod.Control.TryGiveControl(sender, id, McmMod.Config.SecureEnabled);
-                    Mod.Control.TryGiveControl(sender, id, Mod.Config.SecureEnabled); // McmMod already instanced as Mod
+                    Mod.Control.TryGiveControl(sender, id, McmMod.Config.SecureEnabled);
                 }
                 else setInGameError();
             }
