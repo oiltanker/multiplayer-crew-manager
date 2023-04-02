@@ -9,7 +9,8 @@ namespace MultiplayerCrewManager {
     class McmChat {
         public McmMod Mod { get; private set; }
 
-        public McmChat(McmMod mod) {
+        public McmChat(McmMod mod)
+        {
             Mod = mod;
         }
 
@@ -39,8 +40,9 @@ namespace MultiplayerCrewManager {
         private static readonly Regex rMaskReservePut = new Regex(@"^mcm\s+reserve\s+put\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReserveGet = new Regex(@"^mcm\s+reserve\s+get\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static readonly Regex rMaskIntValue = new Regex(@"\s\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskBoolValue = new Regex(@"\strue\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskIntValue = new Regex(@"\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskBoolValue = new Regex(@"\s+true\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskUshortValue = new Regex(@"\s+[0-65535]\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public bool? OnChatMessage(string message, Client sender) {
             if (!McmMod.IsCampaign || !rMaskGlobal.IsMatch(message)) return null;
@@ -278,7 +280,6 @@ admin/moderator only commands
             else if (rMaskReserve.IsMatch(message)) { // mcm reserve
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
-                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
                     //TODO place reserve logic here
                 }
                 else setPrivilegeError();
@@ -286,15 +287,16 @@ admin/moderator only commands
             else if (rMaskReservePut.IsMatch(message)) { // mcm reserve put <ID>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
-                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
+                    ushort.TryParse(rMaskUshortValue.Match(message).Value, out ushort value);
                     //TODO place reserve put logic here
+                    McmReserve.putCharacterToReserve(charId: value, client: sender);
                 }
                 else setPrivilegeError();
             }
             else if (rMaskReserveGet.IsMatch(message)) { // mcm reserve get <ID>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
-                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
+                    ushort.TryParse(rMaskUshortValue.Match(message).Value, out ushort value);
                     //TODO place reserve get logic here
                 }
                 else setPrivilegeError();

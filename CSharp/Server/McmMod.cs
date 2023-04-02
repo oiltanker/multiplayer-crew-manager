@@ -27,7 +27,6 @@ namespace MultiplayerCrewManager
         public McmSession Session { get; private set; }
         public McmSave Save { get; private set; }
         public McmChat Chat { get; private set; }
-        public McmReserve Reserve { get; private set; }
 
         public void InitServer()
         {
@@ -38,8 +37,9 @@ namespace MultiplayerCrewManager
             Control = new McmControl(GameMain.Server?.RespawnManager, Manager);
             Session = new McmSession(GameMain.GameSession);
             Save = new McmSave(Control);
+            //Reserve = new McmReserve(mcmSave:new McmSave(Control), clientManager: new McmClientManager());
             Chat = new McmChat(this);
-            Reserve = new McmReserve();
+            
 
             // multiplayer bot talents & etc.
             GameMain.LuaCs.Hook.Add("getSessionCrewCharacters", "mcm_getSessionCrewCharacters", (object[] args) =>
