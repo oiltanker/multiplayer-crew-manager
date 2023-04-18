@@ -42,7 +42,7 @@ namespace MultiplayerCrewManager {
 
         private static readonly Regex rMaskIntValue = new Regex(@"\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskBoolValue = new Regex(@"\s+true\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskUshortValue = new Regex(@"\s+[0-65535]\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        // private static readonly Regex rMaskUshortValue = new Regex(@"\s+[0-65535]\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public bool? OnChatMessage(string message, Client sender) {
             if (!McmMod.IsCampaign || !rMaskGlobal.IsMatch(message)) return null;
@@ -287,7 +287,8 @@ admin/moderator only commands
             else if (rMaskReservePut.IsMatch(message)) { // mcm reserve put <ID>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
-                    ushort.TryParse(rMaskUshortValue.Match(message).Value, out ushort value);
+                    // ushort.TryParse(rMaskUshortValue.Match(message).Value, out ushort value);
+                    Int32.TryParse(rMaskIntValue.Match(message).Value, out int value);
                     //TODO place reserve put logic here
                     McmReserve.putCharacterToReserve(charId: value, client: sender);
                 }
@@ -296,7 +297,8 @@ admin/moderator only commands
             else if (rMaskReserveGet.IsMatch(message)) { // mcm reserve get <ID>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
-                    ushort.TryParse(rMaskUshortValue.Match(message).Value, out ushort value);
+                    // ushort.TryParse(rMaskUshortValue.Match(message).Value, out ushort value);
+                    Int32.TryParse(rMaskIntValue.Match(message).Value, out int value);
                     //TODO place reserve get logic here
                 }
                 else setPrivilegeError();

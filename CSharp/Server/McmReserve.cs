@@ -12,7 +12,11 @@ namespace MultiplayerCrewManager
     //TODO still have issues with writeaccess
     static class McmReserve
     {
-        private static readonly string reserveFilepath = $"{Barotrauma.IO.Path.GetFullPath(GameMain.GameSession.SavePath).Pad + "_ReserveStock.xml")}";
+        private static readonly string reserveFilepath = $"{Barotrauma.IO.Path.GetFullPath(GameMain.GameSession.SavePath).Substring(0, GameMain.GameSession.SavePath.Length-5) + "_ReserveStock.xml"}";
+        // private static readonly string reserveFilepath = savegameFilepath.Substring(0,savegameFilepath.Length-5) + "_ReserveStock.xml";
+
+        // .save_ReserveStock.xml
+        // /home/xardion/.local/share/Daedalic Entertainment GmbH/Barotrauma/Multiplayer/test1.save
         //TODO need fullpath without extension
 
         private static McmClientManager _clientManager = new McmClientManager();
@@ -21,17 +25,11 @@ namespace MultiplayerCrewManager
         {
             try
             {
-                string reserveFilepath2 = $"{Barotrauma.IO.Path.GetFullPath(GameMain.GameSession.SavePath)}";
-
                 LuaCsSetup.PrintCsMessage($"[MCM-SERVER] reserveFilepath: {reserveFilepath}");
-                LuaCsSetup.PrintCsMessage($"[MCM-SERVER] reserveFilepath2: {reserveFilepath2}");
                 if (!isReserveFileExists())
                 {
-                    LuaCsFile.OpenWrite(reserveFilepath);
                     LuaCsFile.Write(reserveFilepath, $"<!-- Multiplayer Crew Manager | reserve-crew file -->{Environment.NewLine}");
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Created reserve-crew file in: {Barotrauma.IO.Path.GetFullPath(reserveFilepath)}");
-                    //File.Create(reserveFilepath);
-                    System.IO.File.WriteAllText(reserveFilepath, $"<!-- Multiplayer Crew Manager | reserve-crew file -->{Environment.NewLine}");
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Created reserve-crew file in: {reserveFilepath}");
                 }
                 else
                 {
