@@ -37,9 +37,7 @@ namespace MultiplayerCrewManager
             Control = new McmControl(GameMain.Server?.RespawnManager, Manager);
             Session = new McmSession(GameMain.GameSession);
             Save = new McmSave(Control);
-            //Reserve = new McmReserve(mcmSave:new McmSave(Control), clientManager: new McmClientManager());
             Chat = new McmChat(this);
-            
 
             // multiplayer bot talents & etc.
             GameMain.LuaCs.Hook.Add("getSessionCrewCharacters", "mcm_getSessionCrewCharacters", (object[] args) =>

@@ -9,23 +9,39 @@ using Barotrauma.Networking;
 
 namespace MultiplayerCrewManager
 {
-    //TODO still have issues with writeaccess
+    /// <summary>
+    /// MCM sub module to manage crew reserve in-game. Cause of hard to resolve some conflicts it's
+    /// made as static.
+    /// </summary>
+    /// <seealso cref="https://evilfactory.github.io/LuaCsForBarotrauma/cs-docs/baro-server/html/namespace_barotrauma.html"/>
     static class McmReserve
     {
+        /// <summary>
+        /// Stores filepath to the file which keeps data about crew reserve. Unique for each campaign.
+        /// Looks like '<campaign_name>_ReserveStock.xml'
+        /// </summary>
         private static readonly string reserveFilepath = $"{Barotrauma.IO.Path.GetFullPath(GameMain.GameSession.SavePath).Substring(0, GameMain.GameSession.SavePath.Length-5) + "_ReserveStock.xml"}";
-        // private static readonly string reserveFilepath = savegameFilepath.Substring(0,savegameFilepath.Length-5) + "_ReserveStock.xml";
 
-        // .save_ReserveStock.xml
-        // /home/xardion/.local/share/Daedalic Entertainment GmbH/Barotrauma/Multiplayer/test1.save
-        //TODO need fullpath without extension
+        /// <summary>
+        /// Check and create data file if need at the first class call
+        /// </summary>
+        static McmReserve() {
+            checkOrCreateFile(reserveFilepath);
+        }
 
+        /// <summary>
+        /// Create an instance of McmClientManager for some chekcs
+        /// </summary>
         private static McmClientManager _clientManager = new McmClientManager();
 
-        private static void createReserveFileIfNeed(string reserveFilepath)
+        /// <summary>
+        /// Create data file if it's not exist
+        /// </summary>
+        /// <param name="reserveFilepath"></param>
+        private static void checkOrCreateFile(string reserveFilepath)
         {
             try
             {
-                LuaCsSetup.PrintCsMessage($"[MCM-SERVER] reserveFilepath: {reserveFilepath}");
                 if (!isReserveFileExists())
                 {
                     LuaCsFile.Write(reserveFilepath, $"<!-- Multiplayer Crew Manager | reserve-crew file -->{Environment.NewLine}");
@@ -42,11 +58,24 @@ namespace MultiplayerCrewManager
             }
         }
 
+        /// <summary>
+        /// Wrapper for LuaCsFile checker
+        /// </summary>
         private static bool isReserveFileExists() => LuaCsFile.Exists(reserveFilepath) ? true : false;
 
-        private static void sendErrorChatMsg(string msg, Client client)
+        /// <summary>
+        /// Send in-game message directly to the client who initialize mcm command
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="messageType">
+        /// This data type coming from LuaCsBarotrauma overhead
+        /// </param>
+        /// <param name="client">
+        /// This data type coming from LuaCsBarotrauma overhead
+        /// </param>
+        private static void sendChatMsg(string msg, ChatMessageType messageType, Client client)
         {
-            var cm = ChatMessage.Create("[Server]", msg, ChatMessageType.Error, null, client);
+            var cm = ChatMessage.Create("[Server]", msg, messageType, null, client);
             cm.IconStyle = "StoreShoppingCrateIcon";
             GameMain.Server.SendDirectChatMessage(cm, client);
             return;
@@ -54,30 +83,44 @@ namespace MultiplayerCrewManager
 
         public static void putCharacterToReserve(int charId, Client client) 
         {
-            createReserveFileIfNeed(reserveFilepath);
             if (!McmMod.IsCampaign || !isReserveFileExists()) return;
-            var msg = string.Empty;
+            string msg = string.Empty;
+            // Get character who need to reserve
             var character = Character.CharacterList.FirstOrDefault(c => charId == c.ID && c.TeamID == CharacterTeamType.Team1);
-            var crewManager = GameMain.GameSession.CrewManager;
-            var CharacterData = McmSave.CharacterData;
+            // Fail if ID is wrong
             if (character == null) 
             {
                 msg = $"[MCM] Failed to send character to the reserve: Character ID [{charId}] not found";
-                sendErrorChatMsg(msg, client);
+                sendChatMsg(msg: msg, messageType: ChatMessageType.Error, client: client);
                 return;
             }
-            if (_clientManager.IsCurrentlyControlled(character))
+            // Fail if targeted character controlled by another client
+            if (_clientManager.IsCurrentlyControlled(character: character))
             {
                 msg = $"[MCM] Failed to send character to the reserve: '{character.DisplayName}' is already in use";
-                sendErrorChatMsg(msg, client);
+                sendChatMsg(msg: msg, messageType: ChatMessageType.Error, client: client);
                 return;
             }
-            var targetCharacterDataElem = CharacterData.Where(c => c.CharacterInfo.ID == charId).ToString();
-            string fileContents = LuaCsFile.Read(reserveFilepath);
-            fileContents.Concat(targetCharacterDataElem);
-            LuaCsFile.Write(path:reserveFilepath, text:fileContents);
-            LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Character saved");
-            //TODO
+            // work flow for the new file
+            // Get data file content for further manipulations
+            String FileContent = LuaCsFile.Read(reserveFilepath);
+            // Create xml structure and write to file
+            XElement CharacterCampaignData = new XElement("CharacterCampaignData");
+            CharacterCampaignData.Add(
+                new XAttribute("name", character.Info.Name), 
+                new XAttribute("address", "PIPE"), 
+                new XAttribute("accountid", "STEAM64_0"));
+            XElement CharData = character.Info.Save(CharacterCampaignData);
+            FileContent += CharacterCampaignData.ToString();
+            LuaCsFile.Write(reserveFilepath, FileContent);
+            //TODO add work flow for the file which already have the data
+            // Send chat msg to client
+            sendChatMsg(msg: $"Character sent to reserve: '{character.Info.Name}' (ID: {character.ID})", messageType: ChatMessageType.Server, client: client);
+            LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Character sent to reserve: '{character.Info.Name}' (ID: {character.ID})");
+            // Remove the character from the current game session and campaign
+            Entity.Spawner.AddEntityToRemoveQueue(character);
+
+            //TODO ensure consistency and uniqueness of data
         }
 
         //public static void getCharacterFromReserve(Character character) 
