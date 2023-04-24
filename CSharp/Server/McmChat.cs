@@ -37,12 +37,11 @@ namespace MultiplayerCrewManager {
         private static readonly Regex rMaskSecure = new Regex(@"^mcm\s+secure\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskSecureEnabled = new Regex(@"^mcm\s+secure\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReserve = new Regex(@"^mcm\s+reserve\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskReservePut = new Regex(@"^mcm\s+reserve\s+put\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskReservePut = new Regex(@"^mcm\s+reserve\s+put\s+\d+\s?(force)?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReserveGet = new Regex(@"^mcm\s+reserve\s+get\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex rMaskIntValue = new Regex(@"\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskBoolValue = new Regex(@"\s+true\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        // private static readonly Regex rMaskUshortValue = new Regex(@"\s+[0-65535]\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public bool? OnChatMessage(string message, Client sender) {
             if (!McmMod.IsCampaign || !rMaskGlobal.IsMatch(message)) return null;
@@ -287,17 +286,20 @@ admin/moderator only commands
             else if (rMaskReservePut.IsMatch(message)) { // mcm reserve put <ID>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
-                    // ushort.TryParse(rMaskUshortValue.Match(message).Value, out ushort value);
-                    Int32.TryParse(rMaskIntValue.Match(message).Value, out int value);
-                    //TODO place reserve put logic here
-                    McmReserve.putCharacterToReserve(charId: value, client: sender);
+                    string digits = new string(message.Where(d => char.IsDigit(d)).ToArray());
+                    Int32.TryParse(digits, out int value);
+                    bool isForce = false;
+                    if (message.Contains("force")) {
+                        isForce = true;
+                        LuaCsSetup.PrintCsMessage("'force' keyword detected"); //debug
+                    }
+                    McmReserve.putCharacterToReserve(charId: value, client: sender, isForce: isForce);
                 }
                 else setPrivilegeError();
             }
             else if (rMaskReserveGet.IsMatch(message)) { // mcm reserve get <ID>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
-                    // ushort.TryParse(rMaskUshortValue.Match(message).Value, out ushort value);
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int value);
                     //TODO place reserve get logic here
                 }

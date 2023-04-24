@@ -85,7 +85,7 @@ namespace MultiplayerCrewManager
             return;
         }
 
-        public static void putCharacterToReserve(int charId, Client client) 
+        public static void putCharacterToReserve(int charId, Client client, bool isForce = false) 
         {
             if (!McmMod.IsCampaign || !isReserveFileExists()) return;
             string msg = string.Empty;
@@ -107,6 +107,18 @@ namespace MultiplayerCrewManager
             }
             // Get xml body from the file
             XDocument xmlFile = XDocument.Load(reserveFilepath);
+            // Check if character was written in file before
+            var nameCheck = xmlFile.Descendants("CharacterCampaignData").Where(elem => (string)elem.Attribute("name") == $"{character.Info.Name}").FirstOrDefault();
+            if (nameCheck != null) {
+                if (isForce == false) {
+                    msg = $"Character with name '{character.Info.Name}' is already saved in reserve. If you want to overwrite character data add 'force' keyword to the end of mcm command expression.";
+                    sendChatMsg(msg: msg, messageType: ChatMessageType.Error, client: client);
+                    return;
+                } else {
+                    // if 'force' keyword was used remove character data to add the new one later
+                    nameCheck.Remove();
+                }
+            }
             // Create xml structure and write to file
             XElement CharacterCampaignData = new XElement("CharacterCampaignData");
             CharacterCampaignData.Add(
@@ -115,10 +127,12 @@ namespace MultiplayerCrewManager
                 new XAttribute("accountid", "STEAM64_0"));
             character.Info.Save(CharacterCampaignData);
             xmlFile.Root.Add(CharacterCampaignData);
+            // Write update to the file
             xmlFile.Save(reserveFilepath);
             // Send notice to game chat and server log
-            sendChatMsg(msg: $"Character sent to reserve: '{character.Info.Name}' (ID: {character.ID})", messageType: ChatMessageType.Server, client: client);
-            LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Character sent to reserve: '{character.Info.Name}' (ID: {character.ID})");
+            msg = $"Character sent to reserve: '{character.Info.Name}' (ID: {character.ID})";
+            sendChatMsg(msg: msg, messageType: ChatMessageType.Server, client: client);
+            LuaCsSetup.PrintCsMessage(msg);
             // Remove the character from the current game session and campaign
             Entity.Spawner.AddEntityToRemoveQueue(character);
 
