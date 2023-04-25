@@ -90,7 +90,7 @@ namespace MultiplayerCrewManager
             if (!McmMod.IsCampaign || !isReserveFileExists()) return;
             string msg = string.Empty;
             // Get character who need to reserve
-            var character = Character.CharacterList.FirstOrDefault(c => charId == c.ID && c.TeamID == CharacterTeamType.Team1);
+            var character = Character.CharacterList.FirstOrDefault(c => charId == c.ID && c.TeamID == CharacterTeamType.Team1); // Character class coming from LuaCsBarotrauma overhead
             // Fail if ID is wrong
             if (character == null) 
             {
@@ -125,7 +125,9 @@ namespace MultiplayerCrewManager
                 new XAttribute("name", character.Info.Name), 
                 new XAttribute("address", "PIPE"), 
                 new XAttribute("accountid", "STEAM64_0"));
-            character.Info.Save(CharacterCampaignData);
+            character.Info.Save(CharacterCampaignData); // Character
+            CharacterCampaignData.Add(character.Info.InventoryData); // Inventory
+            CharacterCampaignData.Add(character.Info.HealthData); // Health
             xmlFile.Root.Add(CharacterCampaignData);
             // Write update to the file
             xmlFile.Save(reserveFilepath);
