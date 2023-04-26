@@ -85,6 +85,12 @@ namespace MultiplayerCrewManager
             return;
         }
 
+        /// <summary>
+        /// Provide the feature to save and hide character immediately in the mid-round.
+        /// </summary>
+        /// <param name="charId"></param>
+        /// <param name="client"></param>
+        /// <param name="isForce"></param>
         public static void putCharacterToReserve(int charId, Client client, bool isForce = false) 
         {
             if (!McmMod.IsCampaign || !isReserveFileExists()) return;
@@ -145,9 +151,29 @@ namespace MultiplayerCrewManager
         //    //TODO
         //}
 
-        //public static List<CharacterCampaignData> reserveList() 
-        //{
-        //    //TODO
-        //}
+        /// <summary>
+        /// Showing list of reserved chars directly in chat. Maybe rework it to show in message box later.
+        /// </summary>
+        /// <param name="client">
+        /// </param>
+        public static void showReserveList(Client client) 
+        {
+           uint k = 0;
+           XDocument xmlFile = XDocument.Load(reserveFilepath);
+           string output = "-= Crew reserve list =-" + Environment.NewLine;
+           foreach(var CCD in xmlFile.Descendants("CharacterCampaignData")) {
+                k++;
+                string name = CCD.Attribute("name").Value;
+                string job = CCD.Element("Character").Element("job").Attribute("name").Value;
+                string wallet = CCD.Element("Wallet").Attribute("balance").Value;
+                output += $"#{k} | {job} | {name} | {wallet} credits" + Environment.NewLine;
+           }
+           if (k == 0) {
+                output += "No characters in reserve";
+           }
+           var cm = ChatMessage.Create("[Server]", output, ChatMessageType.Server, null, client);
+           cm.IconStyle = "StoreShoppingCrateIcon";
+           GameMain.Server.SendDirectChatMessage(cm, client);
+        }
     }
 }

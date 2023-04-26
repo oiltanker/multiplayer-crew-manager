@@ -279,7 +279,7 @@ admin/moderator only commands
             else if (rMaskReserve.IsMatch(message)) { // mcm reserve
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
-                    //TODO place reserve logic here
+                    McmReserve.showReserveList(client: sender);
                 }
                 else setPrivilegeError();
             }
