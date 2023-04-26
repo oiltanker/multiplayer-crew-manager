@@ -120,14 +120,15 @@ namespace MultiplayerCrewManager
                 }
             }
             // Create xml structure and write to file
-            XElement CharacterCampaignData = new XElement("CharacterCampaignData");
-            CharacterCampaignData.Add(
+            XElement CharacterCampaignData = new XElement("CharacterCampaignData",
                 new XAttribute("name", character.Info.Name), 
                 new XAttribute("address", "PIPE"), 
                 new XAttribute("accountid", "STEAM64_0"));
+            XElement characterWalletData = character.Wallet.Save();
             character.Info.Save(CharacterCampaignData); // Character
             CharacterCampaignData.Add(character.Info.InventoryData); // Inventory
             CharacterCampaignData.Add(character.Info.HealthData); // Health
+            CharacterCampaignData.Add(characterWalletData); // Wallet
             xmlFile.Root.Add(CharacterCampaignData);
             // Write update to the file
             xmlFile.Save(reserveFilepath);
@@ -137,8 +138,6 @@ namespace MultiplayerCrewManager
             LuaCsSetup.PrintCsMessage(msg);
             // Remove the character from the current game session and campaign
             Entity.Spawner.AddEntityToRemoveQueue(character);
-
-            //TODO ensure consistency and uniqueness of data
         }
 
         //public static void getCharacterFromReserve(Character character) 

@@ -291,7 +291,6 @@ admin/moderator only commands
                     bool isForce = false;
                     if (message.Contains("force")) {
                         isForce = true;
-                        LuaCsSetup.PrintCsMessage("'force' keyword detected"); //debug
                     }
                     McmReserve.putCharacterToReserve(charId: value, client: sender, isForce: isForce);
                 }
