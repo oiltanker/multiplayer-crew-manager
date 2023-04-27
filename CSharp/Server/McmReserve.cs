@@ -85,6 +85,13 @@ namespace MultiplayerCrewManager
             return;
         }
 
+        private static void sendChatToBoth(string msg, ChatMessageType messageType, Client client)
+        {
+            sendChatMsg(msg, messageType, client);
+            LuaCsSetup.PrintCsMessage(msg);
+            return;
+        }
+
         /// <summary>
         /// Provide the feature to save and hide character immediately in the mid-round.
         /// </summary>
@@ -146,10 +153,28 @@ namespace MultiplayerCrewManager
             Entity.Spawner.AddEntityToRemoveQueue(character);
         }
 
-        //public static void getCharacterFromReserve(Character character) 
-        //{
-        //    //TODO
-        //}
+        public static void getCharacterFromReserve(ushort ordinal, Client client) 
+        {
+            XDocument xmlFile = XDocument.Load(reserveFilepath);
+            int ccdQty = xmlFile.Descendants("CharacterCampaignData").Length;
+            string msg = string.Empty;
+            if ((ordinal > ccdQty) || (ordinal == 0)) {
+                msg = $"An invalid id data was input: {ordinal}. Use 'mcm reserve' command to check the valid IDs.";
+                sendChatToBoth(msg: msg, messageType: ChatMessageType.Error, client);
+                return;
+            }
+            LuaCsSetup.PrintCsMessage($"ccdQty contains: {ccdQty}"); //debug
+            ushort k = 0; // counter
+            foreach(var CCD in xmlFile.Descendants("CharacterCampaignData")) {
+                k++;
+                if (k == ordinal) {
+                    // get char data and load in round
+                    break; 
+                }
+           }
+           msg = "Character loaded.";
+           sendChatToBoth(msg, ChatMessageType.Server, client);           
+        }
 
         /// <summary>
         /// Showing list of reserved chars directly in chat. Maybe rework it to show in message box later.

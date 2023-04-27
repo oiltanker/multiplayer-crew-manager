@@ -300,7 +300,7 @@ admin/moderator only commands
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
                     messageType = ChatMessageType.Server;
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int value);
-                    //TODO place reserve get logic here
+                    McmReserve.getCharacterFromReserve(ordinal: value, client: sender);
                 }
                 else setPrivilegeError();
             }
