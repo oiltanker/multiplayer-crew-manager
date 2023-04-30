@@ -85,7 +85,7 @@ namespace MultiplayerCrewManager
             return;
         }
 
-        private static void sendChatToBoth(string msg, ChatMessageType messageType, Client client)
+        private static void sendMsgToBoth(string msg, ChatMessageType messageType, Client client)
         {
             sendChatMsg(msg, messageType, client);
             LuaCsSetup.PrintCsMessage(msg);
@@ -153,14 +153,14 @@ namespace MultiplayerCrewManager
             Entity.Spawner.AddEntityToRemoveQueue(character);
         }
 
-        public static void getCharacterFromReserve(ushort ordinal, Client client) 
+        public static void getCharacterFromReserve(int ordinal, Client client) 
         {
             XDocument xmlFile = XDocument.Load(reserveFilepath);
-            int ccdQty = xmlFile.Descendants("CharacterCampaignData").Length;
+            int ccdQty = xmlFile.Descendants("CharacterCampaignData").Count();
             string msg = string.Empty;
             if ((ordinal > ccdQty) || (ordinal == 0)) {
                 msg = $"An invalid id data was input: {ordinal}. Use 'mcm reserve' command to check the valid IDs.";
-                sendChatToBoth(msg: msg, messageType: ChatMessageType.Error, client);
+                sendMsgToBoth(msg: msg, messageType: ChatMessageType.Error, client);
                 return;
             }
             LuaCsSetup.PrintCsMessage($"ccdQty contains: {ccdQty}"); //debug
@@ -168,12 +168,81 @@ namespace MultiplayerCrewManager
             foreach(var CCD in xmlFile.Descendants("CharacterCampaignData")) {
                 k++;
                 if (k == ordinal) {
-                    // get char data and load in round
+                    CharacterCampaignData ccdObj = new CharacterCampaignData(CCD);
+                    // var waypoint = getReservedCharWaypoint(ccdObj);
+                    var waypoint = WayPoint.GetRandom(spawnType: SpawnType.Human, assignedJob: ccdObj.CharacterInfo.Job.Prefab, sub: Submarine.MainSub);
+                    // spawn character
+                    var character = Character.Create(characterInfo: ccdObj.CharacterInfo, position: waypoint.WorldPosition, seed: ccdObj.CharacterInfo.Name, isRemotePlayer: false, hasAi: true, spawnInitialItems: false);
+                    character.TeamID = CharacterTeamType.Team1;
+                    ccdObj.ApplyHealthData(character);
+                    ccdObj.ApplyWalletData(character);
+                    ccdObj.SpawnInventoryItems(character, character.Inventory);
+                    character.LoadTalents();
+                    var crewManager = GameMain.GameSession?.CrewManager;
+                    crewManager.AddCharacter(character);
+                    //TODO
+                    /*
+                    Add instant delition a character data from crew reserve data file
+                    Add instant insert a char data in [campaign_name]_CharacterData.xml and reload CCD+ccdObj for correct working of methods LoadTalents() and SpawnInventoryItems()
+                    Adjust OnBeforeSavePlayers() to processing characters gotten from the crew reserve or ensure compatibility
+                    Add custom jobs support (mainly is Neurotrauma mod)
+                    */
+
+
+
+                    msg = $"Character {ccdObj.Name} loaded.";
+                    sendMsgToBoth(msg, ChatMessageType.Server, client);
                     break; 
                 }
-           }
-           msg = "Character loaded.";
-           sendChatToBoth(msg, ChatMessageType.Server, client);           
+           }          
+        }
+
+        private static Barotrauma.WayPoint getReservedCharWaypoint(CharacterCampaignData CCD) {
+            var subSpawnPoints = WayPoint.WayPointList.FindAll(w =>
+                w.SpawnType == SpawnType.Human &&
+                w.Submarine == Submarine.MainSub &&
+                w.CurrentHull != null);
+            var jobAssignedSpawnPoints = subSpawnPoints.FindAll(w => w.AssignedJob != null);
+            var anyAssignedSpawnPoints = subSpawnPoints.FindAll(w => w.AssignedJob == null);
+            var availableJobSpawnPoints = new List<Barotrauma.WayPoint>(jobAssignedSpawnPoints);
+            var availableAnySpawnPoints = new List<Barotrauma.WayPoint>(anyAssignedSpawnPoints);
+            //Setting a waypoint
+            Barotrauma.WayPoint waypoint = null;
+            ////////
+            if (subSpawnPoints.Any(w => w.AssignedJob == CCD.CharacterInfo.Job.Prefab))
+            {
+                waypoint = availableJobSpawnPoints.FirstOrDefault(w => w.AssignedJob == CCD.CharacterInfo.Job.Prefab);
+                if (waypoint == null) //No unique spawn point available anymore - pick one at random
+                {
+                    waypoint = jobAssignedSpawnPoints[Rand.Int(jobAssignedSpawnPoints.Count, Rand.RandSync.ServerAndClient)];
+                }
+                else
+                {
+                    availableJobSpawnPoints.Remove(waypoint);
+                }
+            }
+            else //no spawn point exists for clients job
+            {
+                LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Character [{CCD.Name}] has a job [{CCD.CharacterInfo.Job.Name}] That does not have a dedicated spawn point");
+                if (anyAssignedSpawnPoints.Count == 0) //this sub does not have any "Any" spawnpoints
+                {
+                    //Fail-Over... Pick any random job spawnpoint
+                    waypoint = subSpawnPoints.FirstOrDefault();
+                }
+                else
+                {
+                    if (availableAnySpawnPoints.Count == 0) //No unique spawn locations available anymore - pick one at random
+                    {
+                        waypoint = anyAssignedSpawnPoints[Rand.Int(anyAssignedSpawnPoints.Count, Rand.RandSync.ServerAndClient)];
+                    }
+                    else
+                    {
+                        waypoint = availableAnySpawnPoints.FirstOrDefault();
+                        availableAnySpawnPoints.Remove(waypoint);
+                    }
+                }
+            }
+            return waypoint;
         }
 
         /// <summary>
@@ -183,7 +252,7 @@ namespace MultiplayerCrewManager
         /// </param>
         public static void showReserveList(Client client) 
         {
-           uint k = 0;
+           ushort k = 0;
            XDocument xmlFile = XDocument.Load(reserveFilepath);
            string output = "-= Crew reserve list =-" + Environment.NewLine;
            foreach(var CCD in xmlFile.Descendants("CharacterCampaignData")) {
