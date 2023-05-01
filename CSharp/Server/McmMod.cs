@@ -338,6 +338,22 @@ namespace MultiplayerCrewManager
             // spawn pending clients if any or is allowed
             TryCreateClientCharacters(toBeCreated);
             //toBeCreated.ForEach(c => TryCeateClientCharacter(c));
+            OnlineStatResolver();
+        }
+
+        
+        /// <summary>
+        /// Due the asyncrinized network client-server interactions, player's character could be sometimes falling to endless ragdoll on the round start until the player reset himself to the character. This handler is designed to solve this problem
+        /// </summary>
+        public void OnlineStatResolver() {
+            foreach(var client in Client.ClientList) {
+                if (client.Character != null && !client.Character.IsDead && client.InGame && client.Character.ClientDisconnected == true) {
+                    client.Character.ClientDisconnected = false;
+                    client.Character.KillDisconnectedTimer = 0.0f;
+                    client.Character.ResetNetState();
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Character netstate was refreshed: {client.Character.Name}");
+                }
+            }
         }
 
         public bool TryCeateClientCharacter(Client client)
@@ -427,7 +443,6 @@ namespace MultiplayerCrewManager
                 Manager.Set(client, character);
                 character.GiveJobItems(waypoint);
             }
-
             return success;
         }
     }

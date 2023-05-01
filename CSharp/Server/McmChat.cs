@@ -87,8 +87,8 @@ admin/moderator only commands
 — mcm secure <true/false> - secure mode to allow only admins/moderators to gain control on/off
 
 - mcm reserve - show characters stocked in reserve
-- mcm reserve put <ID> - put character (with inventory) in reserve with provided ID
-- mcm reserve get <ID> - get character (with inventory) from reserve with provided ID
+- mcm reserve put <ID> - put character in reserve with provided ID
+- mcm reserve get <ID> - get character from reserve with provided ID
 ";
             }
             else if (rMaskList.IsMatch(message)) { // mcm list

@@ -82,6 +82,10 @@ Steam 创意工坊：https://steamcommunity.com/sharedfiles/filedetails/?id=2775
 * `mcm secure` — 显示当前安全模式状态
 * `mcm secure` <true/false> — 安全模式只允许管理员/版主获得开/关控制权
 
+* `mcm reserve` - 显示储备中的字符
+* `mcm reserve put <ID>` - 使用提供的ID将角色保留
+* `mcm reserve get <ID>` - 使用提供的ID从储备中获取字符
+
 ## 注意事项
 
 * **要启用这个模组**，首先你要在游戏设置中启用。然后在**创建服务器**时**服务器可执行文件**选择 **Lua For Barotrauma - DedicatedServer**。
