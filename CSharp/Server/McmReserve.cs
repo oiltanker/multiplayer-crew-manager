@@ -193,11 +193,9 @@ namespace MultiplayerCrewManager
                     string[] NTLocalizedSurgeonJobnames = new string[] {"Surgeon", "Chirurgien", "외과 의사", "Chirurg", "Cirurgião", "Хирург", "Cirujano", "Cerrah"};
                     Barotrauma.WayPoint waypoint = null;
                     if (Array.Find(NTLocalizedSurgeonJobnames, jn => jn == ccdObj.CharacterInfo.Job.Name) != null) {
-                        LuaCsSetup.PrintCsMessage($"getCharacterFromReserve check: NT Job discovered"); //debug
                         waypoint = WayPoint.GetRandom(spawnType: SpawnType.Human, assignedJob: null, sub: Submarine.MainSub);
                     ////////////
                     } else {
-                        LuaCsSetup.PrintCsMessage($"getCharacterFromReserve check: Vanilla Job discovered"); //debug
                         waypoint = WayPoint.GetRandom(spawnType: SpawnType.Human, assignedJob: ccdObj.CharacterInfo.Job.Prefab, sub: Submarine.MainSub);
                     }
                     // spawn character
