@@ -189,14 +189,10 @@ namespace MultiplayerCrewManager
                 k++;
                 if (k == ordinal) {
                     CharacterCampaignData ccdObj = new CharacterCampaignData(CCD);
-                    //////////// Neurotrauma compatible code block
-                    string[] NTLocalizedSurgeonJobnames = new string[] {"Surgeon", "Chirurgien", "외과 의사", "Chirurg", "Cirurgião", "Хирург", "Cirujano", "Cerrah"};
                     Barotrauma.WayPoint waypoint = null;
-                    if (Array.Find(NTLocalizedSurgeonJobnames, jn => jn == ccdObj.CharacterInfo.Job.Name) != null) {
+                    waypoint = WayPoint.GetRandom(spawnType: SpawnType.Human, assignedJob: ccdObj.CharacterInfo.Job.Prefab, sub: Submarine.MainSub);
+                    if (waypoint == null) { // if job is not recognized meaning a custom job, let spawn character at random point inside the sub
                         waypoint = WayPoint.GetRandom(spawnType: SpawnType.Human, assignedJob: null, sub: Submarine.MainSub);
-                    ////////////
-                    } else {
-                        waypoint = WayPoint.GetRandom(spawnType: SpawnType.Human, assignedJob: ccdObj.CharacterInfo.Job.Prefab, sub: Submarine.MainSub);
                     }
                     // spawn character
                     var character = Character.Create(characterInfo: ccdObj.CharacterInfo, position: waypoint.WorldPosition, seed: ccdObj.CharacterInfo.Name, isRemotePlayer: false, hasAi: true, spawnInitialItems: false);
