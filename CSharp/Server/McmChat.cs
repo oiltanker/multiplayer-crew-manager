@@ -9,7 +9,8 @@ namespace MultiplayerCrewManager {
     class McmChat {
         public McmMod Mod { get; private set; }
 
-        public McmChat(McmMod mod) {
+        public McmChat(McmMod mod)
+        {
             Mod = mod;
         }
 
@@ -35,10 +36,12 @@ namespace MultiplayerCrewManager {
         private static readonly Regex rMaskRespawnTime = new Regex(@"^mcm\s+respawn\s+time\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskSecure = new Regex(@"^mcm\s+secure\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskSecureEnabled = new Regex(@"^mcm\s+secure\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        
+        private static readonly Regex rMaskReserve = new Regex(@"^mcm\s+reserve\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskReservePut = new Regex(@"^mcm\s+reserve\s+put\s+\d+\s?(force)?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskReserveGet = new Regex(@"^mcm\s+reserve\s+get\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static readonly Regex rMaskIntValue = new Regex(@"\s\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskBoolValue = new Regex(@"\strue\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskIntValue = new Regex(@"\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskBoolValue = new Regex(@"\s+true\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public bool? OnChatMessage(string message, Client sender) {
             if (!McmMod.IsCampaign || !rMaskGlobal.IsMatch(message)) return null;
@@ -79,8 +82,13 @@ admin/moderator only commands
 — mcm respawn penalty <true/false> - trun respawning penalty on/off
 — mcm respawn delay <number> - time to wait before respawning
 — mcm respawn time <number> - time that respawnees have to catch up with the main sub
+
 — mcm secure - show the current secure mode status
 — mcm secure <true/false> - secure mode to allow only admins/moderators to gain control on/off
+
+- mcm reserve - show characters stocked in reserve
+- mcm reserve put <ID> - put character in reserve with provided ID
+- mcm reserve get <ID> - get character from reserve with provided ID
 ";
             }
             else if (rMaskList.IsMatch(message)) { // mcm list
@@ -265,6 +273,34 @@ admin/moderator only commands
                     else response = "[MCM] Secure mode is turned OFF";
                     McmMod.Config.SecureEnabled = value;
                     McmMod.SaveConfig();
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskReserve.IsMatch(message)) { // mcm reserve
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    messageType = ChatMessageType.Server;
+                    McmReserve.showReserveList(client: sender);
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskReservePut.IsMatch(message)) { // mcm reserve put <ID>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    messageType = ChatMessageType.Server;
+                    string digits = new string(message.Where(d => char.IsDigit(d)).ToArray());
+                    Int32.TryParse(digits, out int value);
+                    bool isForce = false;
+                    if (message.Contains("force")) {
+                        isForce = true;
+                    }
+                    McmReserve.putCharacterToReserve(charId: value, client: sender, isForce: isForce);
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskReserveGet.IsMatch(message)) { // mcm reserve get <ID>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    messageType = ChatMessageType.Server;
+                    Int32.TryParse(rMaskIntValue.Match(message).Value, out int value);
+                    McmReserve.getCharacterFromReserve(ordinal: value, client: sender);
                 }
                 else setPrivilegeError();
             }

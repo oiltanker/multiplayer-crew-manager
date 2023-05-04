@@ -116,7 +116,7 @@ namespace MultiplayerCrewManager
                 return true;
             }, this);
 
-            // methos hooks
+            // method hooks
             InitMethodHooks();
             LuaCsSetup.PrintCsMessage("[MCM-SERVER] Initialization complete");
         }
@@ -325,7 +325,7 @@ namespace MultiplayerCrewManager
                 {
                     // mark client in game registered
                     client.SpectateOnly = true;
-                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] New client - {client.CharacterID} | '{client.Name}'");
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] New client - {client.CharacterID} | '{client.Name}'");
                     // if spawning is enabled then check if spawn is needed
                     if (McmMod.Config.AllowSpawnNewClients && client.InGame && client.Character == null)
                     {
@@ -338,6 +338,22 @@ namespace MultiplayerCrewManager
             // spawn pending clients if any or is allowed
             TryCreateClientCharacters(toBeCreated);
             //toBeCreated.ForEach(c => TryCeateClientCharacter(c));
+            OnlineStatResolver();
+        }
+
+        
+        /// <summary>
+        /// Due the asyncrinized network client-server interactions, player's character could be sometimes falling to endless ragdoll on the round start until the player reset himself to the character. This handler is designed to solve this problem
+        /// </summary>
+        public void OnlineStatResolver() {
+            foreach(var client in Client.ClientList) {
+                if (client.Character != null && !client.Character.IsDead && client.InGame && client.Character.ClientDisconnected == true) {
+                    client.Character.ClientDisconnected = false;
+                    client.Character.KillDisconnectedTimer = 0.0f;
+                    client.Character.ResetNetState();
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Character netstate was refreshed: {client.Character.Name}");
+                }
+            }
         }
 
         public bool TryCeateClientCharacter(Client client)
@@ -386,7 +402,7 @@ namespace MultiplayerCrewManager
                 }
                 else //no spawn point exists for clients job
                 {
-                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] Client [{client.Name}] has a job [{client.AssignedJob.Prefab.Name}] That does not have a dedicated spawn point");
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Client [{client.Name}] has a job [{client.AssignedJob.Prefab.Name}] That does not have a dedicated spawn point");
                     if (anyAssignedSpawnPoints.Count == 0) //this sub does not have any "Any" spawnpoints
                     {
                         //Fail-Over... Pick any random job spawnpoint
@@ -408,11 +424,11 @@ namespace MultiplayerCrewManager
 
                 if (waypoint == null)
                 {
-                    LuaCsSetup.PrintCsMessage($"[MCM-SEVER] Failure attempting to create character for client [{client.Name}] - No spawn point found for job [{client.AssignedJob.Prefab.Name}]. Picking another job spawnpoint at random");
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Failure attempting to create character for client [{client.Name}] - No spawn point found for job [{client.AssignedJob.Prefab.Name}]. Picking another job spawnpoint at random");
                     var failover = subSpawnPoints[Rand.Int(subSpawnPoints.Count, Rand.RandSync.ServerAndClient)];
                     if (failover == null)
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SEVER] Unable to fail-over - Aborting");
+                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unable to fail-over - Aborting");
                         return false;
                     }
                     waypoint = failover;
@@ -427,7 +443,6 @@ namespace MultiplayerCrewManager
                 Manager.Set(client, character);
                 character.GiveJobItems(waypoint);
             }
-
             return success;
         }
     }
