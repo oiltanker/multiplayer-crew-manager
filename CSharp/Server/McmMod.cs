@@ -271,7 +271,6 @@ namespace MultiplayerCrewManager
                 },
                 LuaCsHook.HookMethodType.After);
 
-            // add player exp
             GameMain.LuaCs.Hook.Patch(
                "mcm_CrewManager_InitRound",
                "Barotrauma.CrewManager",
@@ -281,6 +280,7 @@ namespace MultiplayerCrewManager
                {
                    Control.OnInitRound(instance as CrewManager);
                    Save.RestoreCharactersWallets();
+                   McmSave.ImportSaveProtection();
                    return null;
                },
                LuaCsHook.HookMethodType.After);

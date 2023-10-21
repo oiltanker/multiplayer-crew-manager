@@ -15,16 +15,16 @@ namespace MultiplayerCrewManager {
             public McmConfig() { }
         }
 
-        private static readonly string configFilepath = $"{ACsMod.GetSoreFolder<McmMod>()}/McmConfig.xml";
+        public static string GetConfigFilePath => System.IO.Path.Combine(ACsMod.GetStoreFolder<McmMod>(), "McmConfig.xml");
         public static McmConfig Config { get; private set; }
 
         public static void LoadConfig() {
-            if (LuaCsFile.Exists(configFilepath))
-                Config = LuaCsConfig.Load<McmConfig>(configFilepath);
+            if (LuaCsFile.Exists(GetConfigFilePath))
+                Config = LuaCsConfig.Load<McmConfig>(GetConfigFilePath);
             else Config = new McmConfig();
         }
         public static void SaveConfig() {
-            LuaCsConfig.Save(configFilepath, Config);
+            LuaCsConfig.Save(GetConfigFilePath, Config);
         }
     }
 }
