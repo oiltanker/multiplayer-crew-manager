@@ -61,7 +61,8 @@ namespace MultiplayerCrewManager
             //If the mod is added into an ongoing campaign we might have existing player toons that is not stored in our SavedPlayers
             if (SavedPlayers.Count == 0)
             {
-                var ExistingCharacters = CharacterData.Where(x => x.CharacterInfo.ExperiencePoints > 0).ToList(); //Add any character that has more than 0 XP
+                //var ExistingCharacters = CharacterData.Where(x => x.CharacterInfo.ExperiencePoints > 0).ToList(); //Add any character that has more than 0 XP
+                var ExistingCharacters = CharacterData.ToList(); //Add all known CharacterCampaignData (this should only be player characters... right?)
                 if (ExistingCharacters.Any())
                 {
                     LuaCsSetup.PrintCsMessage("[MCM-SERVER] Warning! - No saved players was detected in mcm, But one or more \"non-zero\" EXP characters was found in save - Has this mod been added to a running campaign?");
@@ -127,8 +128,21 @@ namespace MultiplayerCrewManager
                 SavedPlayers.ForEach(p =>
                 {
                     var charInfo = p.CharacterInfo;
-                    charInfo.InventoryData = p.CharacterInfo.InventoryData == null ? (XElement)itemData.GetValue(p) : p.CharacterInfo.InventoryData;
-                    charInfo.HealthData = p.CharacterInfo.HealthData == null ? (XElement)healthData.GetValue(p) : p.CharacterInfo.HealthData;
+                    XElement inventoryData = (XElement)itemData.GetValue(p); //Attempt to read from file
+                    XElement hpData = (XElement)healthData.GetValue(p); //Attempt to read from file
+                    if (inventoryData == null) //If unable to read from file; attempt to fall back on current inventory data
+                    {
+                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing inventorydata, attmepting to default");
+                        inventoryData = charInfo.InventoryData;
+                    }
+                    if (hpData == null) //If unable to read from file; attempt to fall back on current health data
+                    {
+                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing healthdata, attmepting to default");
+                        hpData = charInfo.HealthData;
+                    }
+                    charInfo.InventoryData = inventoryData;
+                    charInfo.HealthData = hpData;
+
                     charInfo.OrderData = p.OrderData;
                     charInfo.IsNewHire = false;
                     crewManager.AddCharacterInfo(charInfo);
