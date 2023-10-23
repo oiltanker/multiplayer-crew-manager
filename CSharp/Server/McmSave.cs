@@ -65,7 +65,7 @@ namespace MultiplayerCrewManager
                 var ExistingCharacters = CharacterData.ToList(); //Add all known CharacterCampaignData (this should only be player characters... right?)
                 if (ExistingCharacters.Any())
                 {
-                    LuaCsSetup.PrintCsMessage("[MCM-SERVER] Warning! - No saved players was detected in mcm, But one or more \"non-zero\" EXP characters was found in save - Has this mod been added to a running campaign?");
+                    LuaCsSetup.PrintCsMessage("[MCM-SERVER] Warning! - One or more characters was found in save but are unknown to MCM - Has this mod been added to a running campaign?");
                     foreach (var c in ExistingCharacters)
                     {
                         LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Importing character. Name [{c.CharacterInfo.Name}] Job [{c.CharacterInfo.Job.Name}] Experience [{c.CharacterInfo.ExperiencePoints}] Level [{c.CharacterInfo.GetCurrentLevel()}]");
