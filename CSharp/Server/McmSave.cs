@@ -69,9 +69,21 @@ namespace MultiplayerCrewManager
                     foreach (var c in ExistingCharacters)
                     {
                         LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Importing character. Name [{c.CharacterInfo.Name}] Job [{c.CharacterInfo.Job.Name}] Experience [{c.CharacterInfo.ExperiencePoints}] Level [{c.CharacterInfo.GetCurrentLevel()}]");
+
+                        #region
+                        //Unsure why we need to set these fields here - but without them the resulting dummy lacks both fields... Maybe this data isn't loaded at this point?
+                        //Bots seem unaffected by this bug; maybe due in fact to them not having CharacterCampaignData before being imported?
+                        if (c.CharacterInfo.InventoryData == null)
+                            c.CharacterInfo.InventoryData = (XElement)itemData.GetValue(c);
+                        if (c.CharacterInfo.HealthData == null)
+                            c.CharacterInfo.HealthData = (XElement)healthData.GetValue(c);
+                        #endregion
+
                         CharacterCampaignData charData = null;
                         using (var dummy = CreateDummy(null, c.CharacterInfo)) charData = new CharacterCampaignData(dummy);
-
+                        
+                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Reading inventory data [{charData.CharacterInfo.InventoryData}]");
+                        
                         CharacterData.Remove(c);
                         CharacterData.Add(charData);
                         SavedPlayers.Add(charData);
