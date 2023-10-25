@@ -77,12 +77,17 @@ namespace MultiplayerCrewManager
                             c.CharacterInfo.InventoryData = (XElement)itemData.GetValue(c);
                         if (c.CharacterInfo.HealthData == null)
                             c.CharacterInfo.HealthData = (XElement)healthData.GetValue(c);
+
                         #endregion
 
                         CharacterCampaignData charData = null;
                         using (var dummy = CreateDummy(null, c.CharacterInfo)) charData = new CharacterCampaignData(dummy);
+
+                        //Migrate wallet data to new character
+                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Transferring wallet data [{c.WalletData}]");
+                        charData.WalletData = c.WalletData;
                         
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Reading inventory data [{charData.CharacterInfo.InventoryData}]");
+                        
                         
                         CharacterData.Remove(c);
                         CharacterData.Add(charData);
@@ -144,12 +149,12 @@ namespace MultiplayerCrewManager
                     XElement hpData = (XElement)healthData.GetValue(p); //Attempt to read from file
                     if (inventoryData == null) //If unable to read from file; attempt to fall back on current inventory data
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing inventorydata, attmepting to default");
+                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing inventory-data - Defaulting to CharacterInfo.InventoryData");
                         inventoryData = charInfo.InventoryData;
                     }
                     if (hpData == null) //If unable to read from file; attempt to fall back on current health data
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing healthdata, attmepting to default");
+                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing health-data, Defaulting to CharacterInfo.HealthData");
                         hpData = charInfo.HealthData;
                     }
                     charInfo.InventoryData = inventoryData;
