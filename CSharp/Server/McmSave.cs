@@ -86,9 +86,9 @@ namespace MultiplayerCrewManager
                         //Migrate wallet data to new character
                         LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Transferring wallet data [{c.WalletData}]");
                         charData.WalletData = c.WalletData;
-                        
-                        
-                        
+
+
+
                         CharacterData.Remove(c);
                         CharacterData.Add(charData);
                         SavedPlayers.Add(charData);
@@ -323,16 +323,35 @@ namespace MultiplayerCrewManager
 
         public void RestoreCharactersWallets()
         {
+            LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Restoring Wallets ...");
+            var toCheckAgainst = Character.CharacterList.ToList(); //Get a copy from the entire CharacterList
+            toCheckAgainst.RemoveAll(x => x.Info == null); //Remove all entries that doesn't have a valid CharacterInfo. (Can this even happen?)
+            
             foreach (var charData in CharacterData)
             {
-                if (charData.WalletData != null)
+                if (charData.CharacterInfo == null) //No need to check characters that can't be identified
                 {
-                    var character = Character.CharacterList?.FirstOrDefault(c => charData.CharacterInfo.GetIdentifier() == c.Info.GetIdentifier());
-                    if (character != null)
-                    {
-                        character.Wallet = new Wallet(Option<Character>.Some(character), charData.WalletData);
-                    }
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] ERROR : Character Data [{charData.Name}] was missing CharacterInfo");
+                    continue;
                 }
+
+                if (charData.WalletData == null) //Character missing a wallet?
+                {
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] ERROR : Wallet-data for character [{charData.Name}] not found");
+                    continue;
+                }
+
+                var character = toCheckAgainst?.FirstOrDefault(c => c.Info.GetIdentifier() == charData.CharacterInfo.GetIdentifier()); //Attempt to find our character based on CharacterInfo-matching
+
+                if (character == null) //Failed to find a matching character
+                {
+                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] ERROR : Unable to find character information matching [{charData.CharacterInfo?.GetIdentifier().ToString() ?? "UNAVAILABLE" }]");
+                    continue;
+                }
+
+                
+                character.Wallet = new Wallet(Option<Character>.Some(character), charData.WalletData); //Wallet restored
+                LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Restoring wallet for character : [{charData.Name}] : [{charData.WalletData}]");
             }
         }
     }
