@@ -147,16 +147,18 @@ namespace MultiplayerCrewManager
                     var charInfo = p.CharacterInfo;
                     XElement inventoryData = (XElement)itemData.GetValue(p); //Attempt to read from file
                     XElement hpData = (XElement)healthData.GetValue(p); //Attempt to read from file
-                    if (inventoryData == null) //If unable to read from file; attempt to fall back on current inventory data
-                    {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing inventory-data - Defaulting to CharacterInfo.InventoryData");
-                        inventoryData = charInfo.InventoryData;
-                    }
-                    if (hpData == null) //If unable to read from file; attempt to fall back on current health data
-                    {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing health-data, Defaulting to CharacterInfo.HealthData");
-                        hpData = charInfo.HealthData;
-                    }
+					if (charInfo.StartItemsGiven) {
+						if (inventoryData == null) //If unable to read from file; attempt to fall back on current inventory data
+						{
+							LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing inventory-data - Defaulting to CharacterInfo.InventoryData");
+							inventoryData = charInfo.InventoryData;
+						}
+						if (hpData == null) //If unable to read from file; attempt to fall back on current health data
+						{
+							LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing health-data, Defaulting to CharacterInfo.HealthData");
+							hpData = charInfo.HealthData;
+						}
+					}
                     charInfo.InventoryData = inventoryData;
                     charInfo.HealthData = hpData;
 
