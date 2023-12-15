@@ -30,8 +30,8 @@ namespace MultiplayerCrewManager
 
         public void InitServer()
         {
-            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Initializing...");
             LoadConfig();
+            McmUtils.Info("Initializing server...");
 
             Manager = new McmClientManager();
             Control = new McmControl(GameMain.Server?.RespawnManager, Manager);
@@ -118,7 +118,7 @@ namespace MultiplayerCrewManager
 
             // method hooks
             InitMethodHooks();
-            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Initialization complete");
+            McmUtils.Info("Initialization complete.");
         }
 
         private void InitMethodHooks()
@@ -244,7 +244,7 @@ namespace MultiplayerCrewManager
                 "mcm_MultiPlayerCampaign_LoadCampaign",
                 "Barotrauma.MultiPlayerCampaign",
                 "LoadCampaign",
-                new string[] { "System.String" },
+                new string[] { "System.String", "Barotrauma.Networking.Client" },
                 (instance, ptable) =>
                 {
                     Save.OnLoadCampaign();
@@ -325,7 +325,7 @@ namespace MultiplayerCrewManager
                 {
                     // mark client in game registered
                     client.SpectateOnly = true;
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] New client - {client.CharacterID} | '{client.Name}'");
+                    McmUtils.Info($"New client - {client.CharacterID} | '{client.Name}'");
                     // if spawning is enabled then check if spawn is needed
                     if (McmMod.Config.AllowSpawnNewClients && client.InGame && client.Character == null)
                     {
@@ -351,7 +351,7 @@ namespace MultiplayerCrewManager
                     client.Character.ClientDisconnected = false;
                     client.Character.KillDisconnectedTimer = 0.0f;
                     client.Character.ResetNetState();
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Character netstate was refreshed: {client.Character.Name}");
+                    McmUtils.Trace($"Character netstate was refreshed: {client.Character.Name}");
                 }
             }
         }
@@ -402,7 +402,7 @@ namespace MultiplayerCrewManager
                 }
                 else //no spawn point exists for clients job
                 {
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Client [{client.Name}] has a job [{client.AssignedJob.Prefab.Name}] That does not have a dedicated spawn point");
+                    McmUtils.Warn($"Client [{client.Name}] has a job [{client.AssignedJob.Prefab.Name}] That does not have a dedicated spawn point");
                     if (anyAssignedSpawnPoints.Count == 0) //this sub does not have any "Any" spawnpoints
                     {
                         //Fail-Over... Pick any random job spawnpoint
@@ -424,11 +424,11 @@ namespace MultiplayerCrewManager
 
                 if (waypoint == null)
                 {
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Failure attempting to create character for client [{client.Name}] - No spawn point found for job [{client.AssignedJob.Prefab.Name}]. Picking another job spawnpoint at random");
+                    McmUtils.Warn($"Failure attempting to create character for client [{client.Name}] - No spawn point found for job [{client.AssignedJob.Prefab.Name}]. Picking another job spawnpoint at random");
                     var failover = subSpawnPoints[Rand.Int(subSpawnPoints.Count, Rand.RandSync.ServerAndClient)];
                     if (failover == null)
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unable to fail-over - Aborting");
+                        McmUtils.Error("Unable to fail-over - Aborting");
                         return false;
                     }
                     waypoint = failover;
