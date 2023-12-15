@@ -39,9 +39,12 @@ namespace MultiplayerCrewManager {
         private static readonly Regex rMaskReserve = new Regex(@"^mcm\s+reserve\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReservePut = new Regex(@"^mcm\s+reserve\s+put\s+\d+\s?(force)?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReserveGet = new Regex(@"^mcm\s+reserve\s+get\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskLoggingLevelSet = new Regex(@"^mcm\slogging\s\d$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskLoggingLevelGet = new Regex(@"^mcm\slogging$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex rMaskIntValue = new Regex(@"\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskBoolValue = new Regex(@"\s+true\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
 
         public bool? OnChatMessage(string message, Client sender) {
             if (!McmMod.IsCampaign || !rMaskGlobal.IsMatch(message)) return null;
@@ -59,7 +62,8 @@ namespace MultiplayerCrewManager {
                 messageType = ChatMessageType.Error;
             };
 
-            if (rMaskHelp1.IsMatch(message) || rMaskHelp2.IsMatch(message)) { // mcm [help]
+            if (rMaskHelp1.IsMatch(message) || rMaskHelp2.IsMatch(message))
+            { // mcm [help]
                 response = @"
 mcm [function] [args] - mcm Function syntax
 
@@ -89,40 +93,53 @@ admin/moderator only commands
 - mcm reserve - show characters stocked in reserve
 - mcm reserve put <ID> - put character in reserve with provided ID
 - mcm reserve get <ID> - get character from reserve with provided ID
+- mcm logging - Gets the current logging level
+- mcm logging <0-4> sets the current logging level (0 - None, 1 - Error, 2 - Warn, 3 - Info, 4 - Trace)
 ";
             }
-            else if (rMaskList.IsMatch(message)) { // mcm list
-                if (isInGame) {
+            else if (rMaskList.IsMatch(message))
+            { // mcm list
+                if (isInGame)
+                {
                     response = "Controllable characters";
-                    foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead)) {
+                    foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead))
+                    {
                         // Team1, meaning default crew
                         response += $"\n  {character.ID} / {character.TeamID.ToString("G")} / {character.SpeciesName} | {character.Name} ({character.DisplayName})";
                     }
                 }
                 else setInGameError();
             }
-            else if (rMaskClientList.IsMatch(message)) { // mcm clientlist
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskClientList.IsMatch(message))
+            { // mcm clientlist
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     response = "Current clients";
                     foreach (var client in Client.ClientList)
                         response += $"\n  {client.CharacterID} | {client.SteamID} - {client.Name}";
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskControl.IsMatch(message)) { // mcm control <ID>
-                if (isInGame) {
+            else if (rMaskControl.IsMatch(message))
+            { // mcm control <ID>
+                if (isInGame)
+                {
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int id);
                     Mod.Control.TryGiveControl(sender, id, McmMod.Config.SecureEnabled);
                 }
                 else setInGameError();
             }
-            else if (rMaskReleaseGeneral.IsMatch(message)) { // mcm release
-                if (isInGame) {
-                    if (sender.Character == null) {
+            else if (rMaskReleaseGeneral.IsMatch(message))
+            { // mcm release
+                if (isInGame)
+                {
+                    if (sender.Character == null)
+                    {
                         response = "[MCM] Not currently controlling any characters";
                         messageType = ChatMessageType.Error;
                     }
-                    else {
+                    else
+                    {
                         Mod.Manager.Set(sender, null);
                         response = "[MCM] Current character released";
                         messageType = ChatMessageType.Server;
@@ -130,17 +147,22 @@ admin/moderator only commands
                 }
                 else setInGameError();
             }
-            else if (rMaskReleaseId.IsMatch(message)) { // mcm release <ID>
-                if (isInGame) {
+            else if (rMaskReleaseId.IsMatch(message))
+            { // mcm release <ID>
+                if (isInGame)
+                {
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int id);
-                    if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                    {
                         var client = Client.ClientList.FirstOrDefault(c => c.Character != null && c.Character.ID == id);
-                        if (client != null) {
+                        if (client != null)
+                        {
                             response = $"[MCM] Character ID - {id} ({client.Character.Name}) released";
                             messageType = ChatMessageType.Server;
                             Mod.Manager.Set(client, null);
                         }
-                        else {
+                        else
+                        {
                             response = $"[MCM] Clinet with the character {id} not found";
                             messageType = ChatMessageType.Error;
                         }
@@ -149,17 +171,22 @@ admin/moderator only commands
                 }
                 else setInGameError();
             }
-            else if (rMaskDelete.IsMatch(message)) { // mcm delete <ID>
-                if (isInGame) {
+            else if (rMaskDelete.IsMatch(message))
+            { // mcm delete <ID>
+                if (isInGame)
+                {
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int id);
-                    if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+                    if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                    {
                         var character = Character.CharacterList.FirstOrDefault(c => c.TeamID == CharacterTeamType.Team1 && c.ID == id);
-                        if (character != null) {
+                        if (character != null)
+                        {
                             Entity.Spawner.AddEntityToRemoveQueue(character);
                             response = $"[MCM] Character ID - {id} ({character.Name}) was removed";
                             messageType = ChatMessageType.Server;
                         }
-                        else {
+                        else
+                        {
                             response = $"[MCM] Character with ID {id} not found";
                             messageType = ChatMessageType.Error;
                         }
@@ -168,19 +195,25 @@ admin/moderator only commands
                 }
                 else setInGameError();
             }
-            else if (rMaskSpawn.IsMatch(message)) { // mcm spawn <ID>
-                if (isInGame) {
-                    if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskSpawn.IsMatch(message))
+            { // mcm spawn <ID>
+                if (isInGame)
+                {
+                    if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                    {
                         Int32.TryParse(rMaskIntValue.Match(message).Value, out int clientId);
 
                         messageType = ChatMessageType.Error;
                         var client = Client.ClientList.FirstOrDefault(c => clientId == c.Character.ID);
-                        if (client != null) {
-                            if (Mod.TryCeateClientCharacter(client)) {
+                        if (client != null)
+                        {
+                            if (Mod.TryCeateClientCharacter(client))
+                            {
                                 response = $"[MCM] Character spawned for client ID - {clientId}";
                                 messageType = ChatMessageType.Server;
                             }
-                            else {
+                            else
+                            {
                                 response = $"[MCM] Could not spawn character for client ID - {clientId} , spawn waypoint not found";
                             }
                         }
@@ -190,8 +223,10 @@ admin/moderator only commands
                 }
                 else setInGameError();
             }
-            else if (rMaskClientAutospawn.IsMatch(message)) { // mcm client autospawn
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskClientAutospawn.IsMatch(message))
+            { // mcm client autospawn
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
                     if (value) response = "[MCM] Automatic new client character spawn is turned ON";
@@ -201,8 +236,10 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskRespawnSet.IsMatch(message)) { // mcm respawn set <true/false> 
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskRespawnSet.IsMatch(message))
+            { // mcm respawn set <true/false> 
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
                     if (value) response = "[MCM] Respawning is turned ON";
@@ -212,8 +249,10 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskRespawnPenalty.IsMatch(message)) { // mcm respawn penalty <true/false>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskRespawnPenalty.IsMatch(message))
+            { // mcm respawn penalty <true/false>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
                     if (value) response = "[MCM] Respawn penalty is turned ON";
@@ -223,8 +262,10 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskRespawnDelay.IsMatch(message)) { // mcm respawn delay <number>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskRespawnDelay.IsMatch(message))
+            { // mcm respawn delay <number>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int delay);
                     response = $"[MCM] Respawn delay is set to {delay} seconds";
@@ -233,8 +274,10 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskRespawnTime.IsMatch(message)) { // mcm respawn time <number>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskRespawnTime.IsMatch(message))
+            { // mcm respawn time <number>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int time);
                     response = $"[MCM] Respawn catch-up time is set to {time} seconds";
@@ -243,9 +286,11 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskRespawn.IsMatch(message)) { // mcm respawn time <number>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
-                    var confStr = new []{
+            else if (rMaskRespawn.IsMatch(message))
+            { // mcm respawn time <number>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    var confStr = new[]{
                         ("Client Autospawn", $"{McmMod.Config.AllowSpawnNewClients}"),
                         ("Allow Respawns", $"{McmMod.Config.AllowRespawns}"),
                         ("Penalty", $"{McmMod.Config.RespawnPenalty}"),
@@ -256,17 +301,21 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskSecure.IsMatch(message)) { // mcm secure
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
-                    var confStr = new []{
+            else if (rMaskSecure.IsMatch(message))
+            { // mcm secure
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    var confStr = new[]{
                         ("Secure Mode", $"{McmMod.Config.SecureEnabled}")
                     }.Select(s => $"\n— {s.Item1}:    {s.Item2}").Aggregate((s1, s2) => $"{s1}{s2}");
                     response = $"Secure Mode:{confStr}";
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskSecureEnabled.IsMatch(message)) { // mcm secure <true/false>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskSecureEnabled.IsMatch(message))
+            { // mcm secure <true/false>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
                     if (value) response = "[MCM] Secure mode is turned ON";
@@ -276,35 +325,115 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskReserve.IsMatch(message)) { // mcm reserve
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskReserve.IsMatch(message))
+            { // mcm reserve
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     McmReserve.showReserveList(client: sender);
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskReservePut.IsMatch(message)) { // mcm reserve put <ID>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskReservePut.IsMatch(message))
+            { // mcm reserve put <ID>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     string digits = new string(message.Where(d => char.IsDigit(d)).ToArray());
                     Int32.TryParse(digits, out int value);
                     bool isForce = false;
-                    if (message.Contains("force")) {
+                    if (message.Contains("force"))
+                    {
                         isForce = true;
                     }
                     McmReserve.putCharacterToReserve(charId: value, client: sender, isForce: isForce);
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskReserveGet.IsMatch(message)) { // mcm reserve get <ID>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands)) {
+            else if (rMaskReserveGet.IsMatch(message))
+            { // mcm reserve get <ID>
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
                     messageType = ChatMessageType.Server;
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int value);
                     McmReserve.getCharacterFromReserve(ordinal: value, client: sender);
                 }
                 else setPrivilegeError();
             }
-            else {
+            else if (rMaskLoggingLevelGet.IsMatch(message))
+            {
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    messageType = ChatMessageType.Server;
+                    var loggingLevel = McmMod.Config.LoggingLevel;
+                    string correspondingLoggingLevel = "";
+                    switch (loggingLevel)
+                    {
+                        case 0:
+                            correspondingLoggingLevel = "None";
+                            break;
+                        case 1:
+                            correspondingLoggingLevel = "Error";
+                            break;
+                        case 2:
+                            correspondingLoggingLevel = "Warn";
+                            break;
+                        case 3:
+                            correspondingLoggingLevel = "Info";
+                            break;
+                        default:
+                            correspondingLoggingLevel = "Trace";
+                            break;
+                    }
+                    response = $"[MCM] - Current logging level set to [{correspondingLoggingLevel}]";
+                }
+                else setPrivilegeError();
+            }
+            else if (rMaskLoggingLevelSet.IsMatch(message))
+            {
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    messageType = ChatMessageType.Server;
+                    if (Int32.TryParse(rMaskIntValue.Match(message).Value, out int value))
+                    {
+                        //Clamp value between 0-4
+                        if (value > 4)
+                            value = 4;
+                        if (value < 0)
+                            value = 0;
+                        McmMod.Config.LoggingLevel = value;
+                        McmMod.SaveConfig();
+                        string correspondingLoggingLevel = "";
+                        switch (value)
+                        {
+                            case 0:
+                                correspondingLoggingLevel = "None";
+                                break;
+                            case 1:
+                                correspondingLoggingLevel = "Error";
+                                break;
+                            case 2:
+                                correspondingLoggingLevel = "Warn";
+                                break;
+                            case 3:
+                                correspondingLoggingLevel = "Info";
+                                break;
+                            default:
+                                correspondingLoggingLevel = "Trace";
+                                break;
+                        }
+                        response = $"[MCM] - Set logging level to [{correspondingLoggingLevel}]";
+                    }
+                    else
+                    {
+                        response = $"ERROR - Could not parse integer from message [{message}]";
+                        McmUtils.Warn($"Could not parse integer from message [{message}]");
+                    }
+                }
+                else setPrivilegeError();
+            }
+            else
+            {
                 response = "[MCM] error: Incorrect function or argument.";
                 messageType = ChatMessageType.Error;
             }

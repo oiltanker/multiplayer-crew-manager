@@ -53,7 +53,7 @@ namespace MultiplayerCrewManager
         {
             if (!McmMod.IsCampaign) return;
 
-            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Loading multiplayer campaign");
+            McmUtils.Info("Loading multiplayer campaign");
             SavedPlayers = CharacterData.Where(c => c.ClientAddress.ToString() == "PIPE").ToList();
             //Saved connections will have their enpoint represented by a new value "Hidden" - So we add all the "Hidden" connections to the list of saved players - this might cause som unintended bugs
             SavedPlayers.AddRange(CharacterData.Where(c => c.ClientAddress.ToString() == "Hidden"));
@@ -65,10 +65,10 @@ namespace MultiplayerCrewManager
                 var ExistingCharacters = CharacterData.ToList(); //Add all known CharacterCampaignData (this should only be player characters... right?)
                 if (ExistingCharacters.Any())
                 {
-                    LuaCsSetup.PrintCsMessage("[MCM-SERVER] Warning! - One or more characters was found in save but are unknown to MCM - Has this mod been added to a running campaign?");
+                    McmUtils.Warn("One or more characters was found in save but are unknown to MCM - Has this mod been added to a running campaign?");
                     foreach (var c in ExistingCharacters)
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Importing character. Name [{c.CharacterInfo.Name}] Job [{c.CharacterInfo.Job.Name}] Experience [{c.CharacterInfo.ExperiencePoints}] Level [{c.CharacterInfo.GetCurrentLevel()}]");
+                        McmUtils.Trace($"Importing character. Name [{c.CharacterInfo.Name}] Job [{c.CharacterInfo.Job.Name}] Experience [{c.CharacterInfo.ExperiencePoints}] Level [{c.CharacterInfo.GetCurrentLevel()}]");
 
                         #region
                         //Unsure why we need to set these fields here - but without them the resulting dummy lacks both fields... Maybe this data isn't loaded at this point?
@@ -84,7 +84,7 @@ namespace MultiplayerCrewManager
                         using (var dummy = CreateDummy(null, c.CharacterInfo)) charData = new CharacterCampaignData(dummy);
 
                         //Migrate wallet data to new character
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Transferring wallet data [{c.WalletData}]");
+                        McmUtils.Trace($"[{c.CharacterInfo.Name}] - Transferring wallet data [{c.WalletData}]");
                         charData.WalletData = c.WalletData;
 
 
@@ -100,13 +100,13 @@ namespace MultiplayerCrewManager
                 List<CharacterInfo> preservedCharacters = crewManager.GetCharacterInfos().Where(c => false == c.IsNewHire).ToList();
                 var removed = preservedCharacters.RemoveAll(x => alreadySavedIds.Contains(x.ID));
                 if (removed > 0)
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Removed {removed} character infos that was already imported");
+                    McmUtils.Trace($"Removed {removed} character infos that was already imported");
                 if (preservedCharacters.Any())
                 {
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Detected [{preservedCharacters.Count()}] bots");
+                    McmUtils.Trace($"Detected [{preservedCharacters.Count()}] bots");
                     foreach (var charInfo in preservedCharacters)
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Importing Bot [{charInfo.ID}] | {charInfo.Name}");
+                        McmUtils.Trace($"Importing Bot [{charInfo.ID}] | {charInfo.Name}");
 
                         CharacterCampaignData charData = null;
                         using (var dummy = CreateDummy(null, charInfo)) charData = new CharacterCampaignData(dummy);
@@ -120,7 +120,7 @@ namespace MultiplayerCrewManager
                 {
                     //Players and bots have been imported
                     RequireImportSaving = true;
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Campaign has been imported");
+                    McmUtils.Trace("Campaign has been imported.");
                 }
             }
 
@@ -135,7 +135,7 @@ namespace MultiplayerCrewManager
         {
             if (!McmMod.IsCampaign) return;
             if (!IsCampaignLoaded) OnLoadCampaign();
-
+            McmUtils.Info("Loading campaign...");
             var crewManager = GameMain.GameSession.CrewManager;
             foreach (var ci in crewManager.GetCharacterInfos().ToArray()) crewManager.RemoveCharacterInfo(ci);
 
@@ -149,12 +149,12 @@ namespace MultiplayerCrewManager
                     XElement hpData = (XElement)healthData.GetValue(p); //Attempt to read from file
                     if (inventoryData == null) //If unable to read from file; attempt to fall back on current inventory data
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing inventory-data - Defaulting to CharacterInfo.InventoryData");
+                        McmUtils.Warn($"Unit [{p.CharacterInfo.Name}] was missing inventory-data - Defaulting to CharacterInfo.InventoryData");
                         inventoryData = charInfo.InventoryData;
                     }
                     if (hpData == null) //If unable to read from file; attempt to fall back on current health data
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Unit [{p.CharacterInfo.Name}] was missing health-data, Defaulting to CharacterInfo.HealthData");
+                        McmUtils.Warn($"Unit [{p.CharacterInfo.Name}] was missing health-data, Defaulting to CharacterInfo.HealthData");
                         hpData = charInfo.HealthData;
                     }
                     charInfo.InventoryData = inventoryData;
@@ -202,7 +202,7 @@ namespace MultiplayerCrewManager
 
         public static XElement OnSaveMultiplayer(CrewManager self, XElement root)
         {
-            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Saving multiplayer campaign");
+            McmUtils.Info("Saving multiplayer campaign");
             var saveElement = new XElement("bots", new XAttribute("hasbots", self.HasBots));
             root?.Add(saveElement);
             return saveElement;
@@ -212,13 +212,13 @@ namespace MultiplayerCrewManager
         {
             if (RequireImportSaving)
             {
-                LuaCsSetup.PrintCsMessage("[MCM-SERVER] Saving imported characters");
+                McmUtils.Info("Saving imported characters");
                 foreach (var characterData in CharacterData)
                 {
                     var character = Character.CharacterList.Find(x => x.Info == characterData.CharacterInfo);
                     if (character != null)
                     {
-                        LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Refreshing character [{characterData.CharacterInfo.ID}] | [{characterData.CharacterInfo.Name}]");
+                        McmUtils.Info($"Refreshing character [{characterData.CharacterInfo.ID}] | [{characterData.CharacterInfo.Name}]");
                         characterData.Refresh(character, true);
                     }
                 }
@@ -248,7 +248,7 @@ namespace MultiplayerCrewManager
 
         public void OnBeforeSavePlayers()
         {
-            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Saving players (pre-process)");
+            McmUtils.Info("Saving players (pre-process)");
             var crewManager = GameMain.GameSession?.CrewManager;
             var str = "Saving crew characters:";
 
@@ -306,12 +306,12 @@ namespace MultiplayerCrewManager
                 str += $"\n    {charInfo.ID} | {charInfo.Name} - New Hire";
             }
             // log status
-            LuaCsSetup.PrintCsMessage(str);
+            McmUtils.Info(str);
         }
 
         public void OnAfterSavePlayers()
         {
-            LuaCsSetup.PrintCsMessage("[MCM-SERVER] Saving players (post-process)");
+            McmUtils.Info("Saving players (post-process)");
 
             // remove actual new
             foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1))
@@ -323,21 +323,21 @@ namespace MultiplayerCrewManager
 
         public void RestoreCharactersWallets()
         {
-            LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Restoring Wallets ...");
+            McmUtils.Info("Restoring Wallets ...");
             var toCheckAgainst = Character.CharacterList.ToList(); //Get a copy from the entire CharacterList
             toCheckAgainst.RemoveAll(x => x.Info == null); //Remove all entries that doesn't have a valid CharacterInfo. (Can this even happen?)
-            
+
             foreach (var charData in CharacterData)
             {
                 if (charData.CharacterInfo == null) //No need to check characters that can't be identified
                 {
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] ERROR : Character Data [{charData.Name}] was missing CharacterInfo");
+                    McmUtils.Error($"Character Data [{charData.Name}] was missing CharacterInfo. Unable to restore wallet for this character");
                     continue;
                 }
 
                 if (charData.WalletData == null) //Character missing a wallet?
                 {
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] ERROR : Wallet-data for character [{charData.Name}] not found");
+                    McmUtils.Error($"Could not find any Wallet-data for character [{charData.Name}] - Unable to restore wallet for this character");
                     continue;
                 }
 
@@ -345,14 +345,16 @@ namespace MultiplayerCrewManager
 
                 if (character == null) //Failed to find a matching character
                 {
-                    LuaCsSetup.PrintCsMessage($"[MCM-SERVER] ERROR : Unable to find character information matching [{charData.CharacterInfo?.GetIdentifier().ToString() ?? "UNAVAILABLE" }]");
+                    McmUtils.Error($"Unable to find character information matching [{charData.CharacterInfo?.GetIdentifier().ToString() ?? "UNAVAILABLE"}]");
                     continue;
                 }
 
-                
+
                 character.Wallet = new Wallet(Option<Character>.Some(character), charData.WalletData); //Wallet restored
-                LuaCsSetup.PrintCsMessage($"[MCM-SERVER] Restoring wallet for character : [{charData.Name}] : [{charData.WalletData}]");
+                McmUtils.Trace($"Restoring wallet for character : [{charData.Name}] : [{charData.WalletData}]");
+
             }
+            McmUtils.Info("Wallets restored.");
         }
     }
 }
