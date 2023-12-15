@@ -149,6 +149,12 @@ namespace MultiplayerCrewManager
                     XElement hpData = (XElement)healthData.GetValue(p); //Attempt to read from file
                     if (inventoryData == null) //If unable to read from file; attempt to fall back on current inventory data
                     {
+                        //Potential Fix described in Pull Request 28
+                        //https://github.com/oiltanker/multiplayer-crew-manager/pull/28
+                        
+                        //if (charInfo.StartItemsGiven) 
+                        //{
+                        //}
                         McmUtils.Warn($"Unit [{p.CharacterInfo.Name}] was missing inventory-data - Defaulting to CharacterInfo.InventoryData");
                         inventoryData = charInfo.InventoryData;
                     }
