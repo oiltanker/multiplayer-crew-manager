@@ -67,9 +67,9 @@ namespace MultiplayerCrewManager
                     ModUtils.Logging.PrintError($"[ERROR] [MCM] - {msg}, Exception {e.Message}");
                 }
             }
-            catch (System.Exception e)
+            catch (System.Exception ex)
             {
-                ModUtils.Logging.PrintError(e.Message);
+                ModUtils.Logging.PrintError(ex.Message);
             }
         }
     }
