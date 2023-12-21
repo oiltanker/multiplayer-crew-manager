@@ -144,21 +144,21 @@ namespace MultiplayerCrewManager
                 LuaCsHook.HookMethodType.Before);
 
             // pirate missions
-            GameMain.LuaCs.Hook.Patch(
-                "mcm_PirateMission_InitPirates",
-                "Barotrauma.PirateMission",
-                "InitPirates",
-                new string[] { },
-                (instance, ptable) =>
-                {
-                    object returnvalue = Session.OnPirateMissionInitPirates(instance as PirateMission);
-                    if (returnvalue is null)
-                        ptable.PreventExecution = false;
-                    else
-                        ptable.PreventExecution = true;
-                    return null;
-                },
-                LuaCsHook.HookMethodType.Before);
+            //GameMain.LuaCs.Hook.Patch(
+            //    "mcm_PirateMission_InitPirates",
+            //    "Barotrauma.PirateMission",
+            //    "InitPirates",
+            //    new string[] { },
+            //    (instance, ptable) =>
+            //    {
+            //        object returnvalue = Session.OnPirateMissionInitPirates(instance as PirateMission);
+            //        if (returnvalue is null)
+            //            ptable.PreventExecution = false;
+            //        else
+            //            ptable.PreventExecution = true;
+            //        return null;
+            //    },
+            //    LuaCsHook.HookMethodType.Before);
 
             // no round end with alive players
             GameMain.LuaCs.Hook.Patch(
