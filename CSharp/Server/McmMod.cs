@@ -151,11 +151,13 @@ namespace MultiplayerCrewManager
                 new string[] { },
                 (instance, ptable) =>
                 {
-                    object returnvalue = Session.OnPirateMissionInitPirates(instance as PirateMission);
-                    if (returnvalue is null)
-                        ptable.PreventExecution = false;
-                    else
-                        ptable.PreventExecution = true;
+                    //object returnvalue = Session.OnPirateMissionInitPirates(instance as PirateMission);
+                    Session.OnPirateMissionInitPirates(instance as PirateMission);
+                    //if (returnvalue is null)
+                    //    ptable.PreventExecution = false;
+                    //else
+                    //    ptable.PreventExecution = true;
+                    ptable.PreventExecution = true;
                     return null;
                 },
                 LuaCsHook.HookMethodType.Before);

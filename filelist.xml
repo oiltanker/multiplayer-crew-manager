@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Multiplayer crew manager" steamworkshopid="2775613786" corepackage="false" modversion="2.1.6" gameversion="1.1.18.1" >
+<contentpackage name="Multiplayer crew manager" steamworkshopid="2775613786" corepackage="false" modversion="2.1.9" gameversion="1.3.0.1" >
   <Item file="%ModDir%/dummyitem.xml" />
   <Other file="%ModDir%/LICENSE" />
   <Other file="%ModDir%/README.md" />

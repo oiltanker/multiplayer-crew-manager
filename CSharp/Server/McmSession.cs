@@ -62,7 +62,7 @@ namespace MultiplayerCrewManager
         private static FieldInfo missionDifficultyField = typeof(PirateMission).GetField("missionDifficulty", BindingFlags.Instance | BindingFlags.NonPublic);
         private static FieldInfo addedMissionDifficultyPerPlayerField = typeof(PirateMission).GetField("addedMissionDifficultyPerPlayer", BindingFlags.Instance | BindingFlags.NonPublic);
         private static FieldInfo levelDataField = typeof(PirateMission).GetField("levelData", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static MethodInfo GetDifficultyModifiedAmountMethod = typeof(PirateMission).GetMethod("GetDifficultyModifiedAmount", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static MethodInfo GetDifficultyModifiedAmountMethod = typeof(PirateMission).GetMethod("GetDifficultyModifiedAmount", BindingFlags.Static | BindingFlags.NonPublic);
         private static FieldInfo characterTypeConfigField = typeof(PirateMission).GetField("characterTypeConfig", BindingFlags.Instance | BindingFlags.NonPublic);
         private static MethodInfo GetRandomDifficultyModifiedElementMethod = typeof(PirateMission).GetMethod("GetRandomDifficultyModifiedElement", BindingFlags.Instance | BindingFlags.NonPublic);
         private static MethodInfo CreateHumanMethod = typeof(Mission).GetMethod("CreateHuman", BindingFlags.Static | BindingFlags.NonPublic);
@@ -74,22 +74,23 @@ namespace MultiplayerCrewManager
             if (!McmMod.IsCampaign) return null;
             var characters = charactersField.GetValue(self) as List<Character>;
             var characterItems = characterItemsField.GetValue(self) as Dictionary<Character, List<Item>>;
-            var characterConfig = characterConfigField.GetValue(self) as XElement;
+            var characterConfig = characterConfigField.GetValue(self) as ContentXElement;
             var missionDifficulty = (missionDifficultyField.GetValue(self) as float?).Value;
             var addedMissionDifficultyPerPlayer = (addedMissionDifficultyPerPlayerField.GetValue(self) as float?).Value;
             var levelData = levelDataField.GetValue(self) as LevelData;
             Func<int, int, float, Random, int> GetDifficultyModifiedAmount = (int minAmount, int maxAmount, float levelDifficulty, Random rand) =>
                 (GetDifficultyModifiedAmountMethod.Invoke(self, new object[] { minAmount, maxAmount, levelDifficulty, rand }) as int?).Value;
-            var characterTypeConfig = characterTypeConfigField.GetValue(self) as XElement;
+            var characterTypeConfig = characterTypeConfigField.GetValue(self) as ContentXElement;
             Func<XElement, float, float, XElement> GetRandomDifficultyModifiedElement = (XElement parentElement, float levelDifficulty, float randomnessModifier) =>
                 GetRandomDifficultyModifiedElementMethod.Invoke(self, new object[] { parentElement, levelDifficulty, randomnessModifier }) as XElement;
-            Func<HumanPrefab,List<Character>,Dictionary<Character,List<Item>>,Submarine,CharacterTeamType,ISpatialEntity,Rand.RandSync,Character> CreateHuman = (HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn, Rand.RandSync randSync) =>
-                CreateHumanMethod.Invoke(self, new object[] { humanPrefab, characters, characterItems, submarine, teamType, positionToStayIn, randSync, }) as Character;
+            Func<HumanPrefab, List<Character>, Dictionary<Character, List<Item>>, Submarine, CharacterTeamType, ISpatialEntity, Rand.RandSync, Character> CreateHuman = (HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn, Rand.RandSync randSync) =>
+                        CreateHumanMethod.Invoke(self, new object[] { humanPrefab, characters, characterItems, submarine, teamType, positionToStayIn, randSync, }) as Character;
 
             Func<XElement, HumanPrefab> GetHumanPrefabFromElement = (XElement element) => GetHumanPrefabFromElementMethod.Invoke(self, new object[] { element }) as HumanPrefab;
             var enemySub = enemySubField.GetValue(self) as Submarine;
             var patrolPositions = patrolPositionsField.GetValue(self) as List<Vector2>;
 
+            McmUtils.Trace("PIRATE MISSION: Clearing characters");
             characters.Clear();
             characterItems.Clear();
 
@@ -100,29 +101,34 @@ namespace MultiplayerCrewManager
             }
 
             int playerCount = GameSession.GetSessionCrewCharacters(CharacterType.Both).Count();
-
+            McmUtils.Trace($"PIRATE MISSION: Estimated player count [{playerCount}]");
             float enemyCreationDifficulty = missionDifficulty + playerCount * addedMissionDifficultyPerPlayer;
-
+            McmUtils.Trace($"PIRATE MISSION: Enemy Difficulty scalar [{enemyCreationDifficulty}]");
             Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
 
             bool commanderAssigned = false;
-
-            foreach (XElement element in characterConfig.Elements())
+            foreach (ContentXElement element in characterConfig.Elements())
             {
                 // it is possible to get more than the "max" amount of characters if the modified difficulty is high enough; this is intentional
                 // if necessary, another "hard max" value could be used to clamp the value for performance/gameplay concerns
                 int amountCreated = GetDifficultyModifiedAmount(element.GetAttributeInt("minamount", 0), element.GetAttributeInt("maxamount", 0), enemyCreationDifficulty, rand);
+                McmUtils.Trace($"PIRATE MISSION: amount created [{amountCreated}]");
+                var characterId = element.GetAttributeString("typeidentifier", string.Empty);
+                McmUtils.Trace($"PIRATE MISSION: Got character ID [{characterId}]");
                 for (int i = 0; i < amountCreated; i++)
                 {
                     XElement characterType = characterTypeConfig.Elements().Where(e => e.GetAttributeString("typeidentifier", string.Empty) == element.GetAttributeString("typeidentifier", string.Empty)).FirstOrDefault();
-
+                    McmUtils.Trace($"PIRATE MISSION: Creating character of type : [{characterType}]");
                     if (characterType == null)
                     {
                         DebugConsole.ThrowError($"No character types defined in CharacterTypes for a declared type identifier in mission \"{self.Prefab.Identifier}\".");
-                        return true; // override
+                        return true;
                     }
 
-                    XElement variantElement = GetRandomDifficultyModifiedElement(characterType, enemyCreationDifficulty, 25); // const value PirateMission.RandomnessModifier
+                    XElement variantElement = GetRandomDifficultyModifiedElement(characterType, enemyCreationDifficulty, 25); //PirateMission.cs 87 "private const float RandomnessModifier = 25;"
+
+                    var humanPrefab = GetHumanPrefabFromElement(variantElement);
+                    if (humanPrefab == null) { continue; }
 
                     Character spawnedCharacter = CreateHuman(GetHumanPrefabFromElement(variantElement), characters, characterItems, enemySub, CharacterTeamType.None, null, Rand.RandSync.ServerAndClient);
                     if (!commanderAssigned)
@@ -139,9 +145,10 @@ namespace MultiplayerCrewManager
                         }
                     }
 
+                    McmUtils.Trace("PIRATE MISSION: Granting ID Tags to Pirates");
                     foreach (Item item in spawnedCharacter.Inventory.AllItems)
                     {
-                        if (item?.Prefab.Identifier == "idcard")
+                        if (item?.GetComponent<Barotrauma.Items.Components.IdCard>() != null)
                         {
                             item.AddTag("id_pirate");
                         }
