@@ -240,7 +240,7 @@ namespace MultiplayerCrewManager
 
             //due to changes in LUA/CS base-lib we need to do some funky magic here to be able to create a new dummy client
             var steamAcc = new Barotrauma.Networking.SteamId(pipeIndex);
-            var conn = new PipeConnection(steamAcc as AccountId);
+            var conn = new PipeConnection(Barotrauma.Option.Some<AccountId>(steamAcc as AccountId));
             dummyC.AccountInfo = new Barotrauma.Networking.AccountInfo(steamAcc);
 
             dummyC.CharacterInfo = charInfo;
