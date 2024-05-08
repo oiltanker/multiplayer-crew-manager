@@ -170,18 +170,37 @@ namespace MultiplayerCrewManager
                 new string[] { "System.Single" },
                 (instance, ptable) =>
                 {
-                    if (!McmMod.IsCampaign)
+                    if (false == McmMod.IsCampaign)
+                    {
                         return null;
+                    }
+
+                    if (false == GameMain.Server.ServerSettings.AllowRespawn)
+                    {
+                        return null;
+                    }
+
 
                     if ((instance as GameServer) != server)
+                    {
                         server = instance as GameServer;
+                    }
 
                     if (endRoundTimer > 0.0f)
                     {
-                        if (Character.CharacterList.Any(c => c.TeamID == CharacterTeamType.Team1 && !(c.IsDead || !c.IsIncapacitated)))
+                        McmUtils.Trace($"Endround Timer [{endRoundTimer}]");
+
+                        var alliedChars = Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1);
+                        if (alliedChars.Any(c => false == c.IsDead || false == c.IsIncapacitated))
+                        {
                             endRoundTimer = -5.0f;
+                            McmUtils.Trace($"There are still alive characters in team, setting new end round timer [{endRoundTimer}]");
+                        }
                         else if (endRoundTimer < 0.0f)
+                        {
                             endRoundTimer = 0.0f;
+                            McmUtils.Trace("Clamping timer to 0");
+                        }
                     }
                     return null;
                 },
@@ -343,13 +362,16 @@ namespace MultiplayerCrewManager
             OnlineStatResolver();
         }
 
-        
+
         /// <summary>
         /// Due the asyncrinized network client-server interactions, player's character could be sometimes falling to endless ragdoll on the round start until the player reset himself to the character. This handler is designed to solve this problem
         /// </summary>
-        public void OnlineStatResolver() {
-            foreach(var client in Client.ClientList) {
-                if (client.Character != null && !client.Character.IsDead && client.InGame && client.Character.ClientDisconnected == true) {
+        public void OnlineStatResolver()
+        {
+            foreach (var client in Client.ClientList)
+            {
+                if (client.Character != null && !client.Character.IsDead && client.InGame && client.Character.ClientDisconnected == true)
+                {
                     client.Character.ClientDisconnected = false;
                     client.Character.KillDisconnectedTimer = 0.0f;
                     client.Character.ResetNetState();
