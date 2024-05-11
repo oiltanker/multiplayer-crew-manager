@@ -26,6 +26,7 @@ namespace MultiplayerCrewManager
         private readonly static FieldInfo itemData = typeof(CharacterCampaignData).GetField("itemData", BindingFlags.NonPublic | BindingFlags.Instance);
         private readonly static FieldInfo healthData = typeof(CharacterCampaignData).GetField("healthData", BindingFlags.NonPublic | BindingFlags.Instance);
         private readonly static FieldInfo cdField = typeof(MultiPlayerCampaign).GetField("characterData", BindingFlags.NonPublic | BindingFlags.Instance);
+        private MethodInfo reduceCharacterSkillsMethod = typeof(RespawnManager).GetMethod("ReduceCharacterSkills", BindingFlags.Static | BindingFlags.Public);
         public static List<CharacterCampaignData> CharacterData
         {
             get => cdField.GetValue(GameMain.GameSession.GameMode as MultiPlayerCampaign) as List<CharacterCampaignData>;
@@ -151,7 +152,7 @@ namespace MultiplayerCrewManager
                     {
                         //Potential Fix described in Pull Request 28
                         //https://github.com/oiltanker/multiplayer-crew-manager/pull/28
-                        
+
                         //if (charInfo.StartItemsGiven) 
                         //{
                         //}
@@ -269,7 +270,7 @@ namespace MultiplayerCrewManager
 
                 if (crewManager.GetCharacterInfos().Any(ci => character.Info == ci))
                 { // if not fired
-                    if (!character.IsDead)
+                    if (false == character.IsDead)
                     {
                         character.Info.TeamID = character.TeamID;
                         CharacterCampaignData charData = null;
@@ -277,14 +278,14 @@ namespace MultiplayerCrewManager
                         CharacterData.Add(charData);
                         str += $"\n    {character.ID} | {character.Name} - OK";
                     }
-                    else if (!McmMod.Config.AllowRespawns)
+                    else if (false == GameMain.Server.ServerSettings.AllowRespawn)
                     {
                         str += $"\n    {character.ID} | {character.Name} - Dead";
                     }
                 }
             }
             // add dead
-            if (McmMod.Config.AllowRespawns)
+            if (GameMain.Server.ServerSettings.AllowRespawn)
             {
                 foreach (var charInfo in Control.Awaiting)
                 {
@@ -292,7 +293,15 @@ namespace MultiplayerCrewManager
                     charInfo.RemoveSavedStatValuesOnDeath();
                     charInfo.CauseOfDeath = null;
 
-                    if (McmMod.Config.RespawnPenalty) RespawnManager.ReduceCharacterSkills(charInfo);
+                    var skillLoss = GameMain.Server.ServerSettings.SkillLossPercentageOnDeath;
+                    if (skillLoss > 0f)
+                    {
+                        if (reduceCharacterSkillsMethod != null)
+                        {
+                            McmUtils.Trace($"Inflicting skill reduction [{skillLoss}%] on charaacter \"{charInfo.Name}\"");
+                            reduceCharacterSkillsMethod.Invoke(null, new object[] { charInfo });
+                        }
+                    }
                     charInfo.StartItemsGiven = false;
 
                     CharacterCampaignData charData = null;

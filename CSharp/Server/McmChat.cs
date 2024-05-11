@@ -82,10 +82,7 @@ admin/moderator only commands
 — mcm client autospawn <true/false> - trun automatic spawning for new connected clients on/off
 
 — mcm respawn - list respawn config
-— mcm respawn set <true/false> - trun respawning on/off
-— mcm respawn penalty <true/false> - trun respawning penalty on/off
 — mcm respawn delay <number> - time to wait before respawning
-— mcm respawn time <number> - time that respawnees have to catch up with the main sub
 
 — mcm secure - show the current secure mode status
 — mcm secure <true/false> - secure mode to allow only admins/moderators to gain control on/off
@@ -236,32 +233,6 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskRespawnSet.IsMatch(message))
-            { // mcm respawn set <true/false> 
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
-                {
-                    messageType = ChatMessageType.Server;
-                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
-                    if (value) response = "[MCM] Respawning is turned ON";
-                    else response = "[MCM] Respawning is turned OFF";
-                    McmMod.Config.AllowRespawns = value;
-                    McmMod.SaveConfig();
-                }
-                else setPrivilegeError();
-            }
-            else if (rMaskRespawnPenalty.IsMatch(message))
-            { // mcm respawn penalty <true/false>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
-                {
-                    messageType = ChatMessageType.Server;
-                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
-                    if (value) response = "[MCM] Respawn penalty is turned ON";
-                    else response = "[MCM] Respawn penalty is turned OFF";
-                    McmMod.Config.RespawnPenalty = value;
-                    McmMod.SaveConfig();
-                }
-                else setPrivilegeError();
-            }
             else if (rMaskRespawnDelay.IsMatch(message))
             { // mcm respawn delay <number>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands))
@@ -274,28 +245,16 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
-            else if (rMaskRespawnTime.IsMatch(message))
-            { // mcm respawn time <number>
-                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
-                {
-                    messageType = ChatMessageType.Server;
-                    Int32.TryParse(rMaskIntValue.Match(message).Value, out int time);
-                    response = $"[MCM] Respawn catch-up time is set to {time} seconds";
-                    McmMod.Config.RespawnTime = (float)time;
-                    McmMod.SaveConfig();
-                }
-                else setPrivilegeError();
-            }
             else if (rMaskRespawn.IsMatch(message))
             { // mcm respawn time <number>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands))
                 {
                     var confStr = new[]{
                         ("Client Autospawn", $"{McmMod.Config.AllowSpawnNewClients}"),
-                        ("Allow Respawns", $"{McmMod.Config.AllowRespawns}"),
-                        ("Penalty", $"{McmMod.Config.RespawnPenalty}"),
+                        //("Allow Respawns", $"{McmMod.Config.AllowRespawns}"),
+                        //("Penalty", $"{McmMod.Config.RespawnPenalty}"),
                         ("Delay", $"{McmMod.Config.RespawnDelay}"),
-                        ("Time", $"{McmMod.Config.RespawnTime}"),
+                        //("Time", $"{McmMod.Config.RespawnTime}"),
                     }.Select(s => $"\n— {s.Item1}:    {s.Item2}").Aggregate((s1, s2) => $"{s1}{s2}");
                     response = $"Respawn Config:{confStr}";
                 }

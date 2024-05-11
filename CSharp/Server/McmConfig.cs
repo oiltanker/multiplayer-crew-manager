@@ -15,10 +15,7 @@ namespace MultiplayerCrewManager
 
         public int ServerUpdateFrequency = 15;
         public bool AllowSpawnNewClients = false;
-        public bool AllowRespawns = false;
         public bool SecureEnabled = false;
-        public bool RespawnPenalty = true;
-        public float RespawnTime = 180;
         public float RespawnDelay = 5;
 
         public McmConfig() { }
@@ -50,7 +47,7 @@ namespace MultiplayerCrewManager
                     using (var fstream = System.IO.File.OpenRead(cfgFilePath))
                     {
                         Config = (McmConfig)serializer.Deserialize(fstream);
-                        McmUtils.Trace($"Loaded config file:\n   [LoggingLevel={Config.LoggingLevel}]\n   [ServerUpdateFrequency={Config.ServerUpdateFrequency}]\n   [AllowSpawnNewClients={Config.AllowSpawnNewClients}]\n   [AllowRespawns={Config.AllowRespawns}]\n   [SecureEnabled={Config.SecureEnabled}]\n   [RespawnPenalty={Config.RespawnPenalty}]\n   [RespawnTime={Config.RespawnTime}]\n   [RespawnDelay={Config.RespawnDelay}]");
+                        McmUtils.Trace($"Loaded config file:\n   [LoggingLevel={Config.LoggingLevel}]\n   [ServerUpdateFrequency={Config.ServerUpdateFrequency}]\n   [AllowSpawnNewClients={Config.AllowSpawnNewClients}]\n   [SecureEnabled={Config.SecureEnabled}]\n   [RespawnDelay={Config.RespawnDelay}]");
                     }
                 }
                 else
