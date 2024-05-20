@@ -130,9 +130,9 @@ namespace MultiplayerCrewManager
             // Get xml body from the file
             XDocument xmlFile = XDocument.Load(reserveFilepath);
             // Check if character was written in file before
-            var nameCheck = xmlFile.Descendants("CharacterCampaignData").Where(elem => (string)elem.Attribute("name") == $"{character.Info.Name}").FirstOrDefault();
+            var nameCheck = xmlFile.Descendants("CharacterCampaignData").FirstOrDefault(elem => (string)elem.Attribute("name") == $"{character.Info.Name}");
             if (nameCheck != null) {
-                if (isForce == false) {
+                if (!isForce) {
                     msg = $"[MCM] Character with name '{character.Info.Name}' is already saved in reserve. If you want to overwrite character data add 'force' keyword to the end of mcm command expression.";
                     sendChatMsg(msg: msg, messageType: ChatMessageType.Error, client: client);
                     return;
@@ -152,7 +152,7 @@ namespace MultiplayerCrewManager
             // Grab inventory data from the character as xml element
             XElement characterInventoryData = new XElement("inventory");
             Barotrauma.Character.SaveInventory(character.Inventory, characterInventoryData);
-            // Grab helath data from the character as xml element
+            // Grab health data from the character as xml element
             XElement characterHealthData = new XElement("health");
             character.CharacterHealth.Save(characterHealthData);
             character.Info.Save(CharacterCampaignData); // Character (appearance, job, skills, talents, etc)
@@ -167,6 +167,7 @@ namespace MultiplayerCrewManager
             sendMsgToBoth(msg: msg, messageType: ChatMessageType.Error, client: client);
             // Remove the character from the current game session (also from campaign too)
             Entity.Spawner.AddEntityToRemoveQueue(character);
+            GameMain.GameSession.CrewManager.RemoveCharacter(character, true, true);
         }
 
         /// <summary>

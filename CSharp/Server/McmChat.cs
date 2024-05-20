@@ -179,6 +179,7 @@ admin/moderator only commands
                         if (character != null)
                         {
                             Entity.Spawner.AddEntityToRemoveQueue(character);
+                            GameMain.GameSession.CrewManager.RemoveCharacter(character, true, true);
                             response = $"[MCM] Character ID - {id} ({character.Name}) was removed";
                             messageType = ChatMessageType.Server;
                         }
@@ -300,11 +301,7 @@ admin/moderator only commands
                     messageType = ChatMessageType.Server;
                     string digits = new string(message.Where(d => char.IsDigit(d)).ToArray());
                     Int32.TryParse(digits, out int value);
-                    bool isForce = false;
-                    if (message.Contains("force"))
-                    {
-                        isForce = true;
-                    }
+                    bool isForce = message.Contains("force");
                     McmReserve.putCharacterToReserve(charId: value, client: sender, isForce: isForce);
                 }
                 else setPrivilegeError();
