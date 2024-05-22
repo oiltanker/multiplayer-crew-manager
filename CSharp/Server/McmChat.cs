@@ -82,6 +82,7 @@ admin/moderator only commands
 — mcm client autospawn <true/false> - trun automatic spawning for new connected clients on/off
 
 — mcm respawn - list respawn config
+— mcm respawn set <true/false> - turn respawning on/off
 — mcm respawn delay <number> - time to wait before respawning
 
 — mcm secure - show the current secure mode status
@@ -234,6 +235,19 @@ admin/moderator only commands
                 }
                 else setPrivilegeError();
             }
+            else if (rMaskRespawnSet.IsMatch(message))
+            { // mcm respawn set <true/false> 
+                if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    messageType = ChatMessageType.Server;
+                    Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
+                    if (value) response = "[MCM] Respawning is turned ON";
+                    else response = "[MCM] Respawning is turned OFF";
+                    GameMain.Server.ServerSettings.AllowRespawn = value;
+                    McmMod.SaveConfig();
+                }
+                else setPrivilegeError();
+            }
             else if (rMaskRespawnDelay.IsMatch(message))
             { // mcm respawn delay <number>
                 if (sender.HasPermission(ClientPermissions.ConsoleCommands))
@@ -252,10 +266,10 @@ admin/moderator only commands
                 {
                     var confStr = new[]{
                         ("Client Autospawn", $"{McmMod.Config.AllowSpawnNewClients}"),
-                        //("Allow Respawns", $"{McmMod.Config.AllowRespawns}"),
+                        ("Allow Respawns", $"{GameMain.Server.ServerSettings.AllowRespawn}"),
                         //("Penalty", $"{McmMod.Config.RespawnPenalty}"),
                         ("Delay", $"{McmMod.Config.RespawnDelay}"),
-                        //("Time", $"{McmMod.Config.RespawnTime}"),
+                        ("Time", $"{GameMain.Server.ServerSettings.RespawnInterval}"),
                     }.Select(s => $"\n— {s.Item1}:    {s.Item2}").Aggregate((s1, s2) => $"{s1}{s2}");
                     response = $"Respawn Config:{confStr}";
                 }
