@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Barotrauma;
 using Barotrauma.IO;
 using Barotrauma.Networking;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MultiplayerCrewManager
 {
@@ -220,24 +221,33 @@ namespace MultiplayerCrewManager
         /// </summary>
         /// <param name="client">
         /// </param>
-        public static void showReserveList(Client client) 
+        public static void showReserveList(Client client)
         {
-           ushort k = 0;
-           XDocument xmlFile = XDocument.Load(reserveFilepath);
-           string output = "-= Crew reserve list =-" + Environment.NewLine;
-           foreach(var CCD in xmlFile.Descendants("CharacterCampaignData")) {
+            var output = ToString();
+            var cm = ChatMessage.Create("[Server]", output, ChatMessageType.Server, null, client);
+           cm.IconStyle = "StoreShoppingCrateIcon";
+           GameMain.Server.SendDirectChatMessage(cm, client);
+        }
+
+        public new static string ToString()
+        {
+            ushort k = 0;
+            XDocument xmlFile = XDocument.Load(reserveFilepath);
+            string output = "-= Crew reserve list =-" + Environment.NewLine;
+            foreach (var CCD in xmlFile.Descendants("CharacterCampaignData"))
+            {
                 k++;
                 string name = CCD.Attribute("name").Value;
                 string job = CCD.Element("Character").Element("job").Attribute("name").Value;
                 string wallet = CCD.Element("Wallet").Attribute("balance").Value;
                 output += $"#{k} | {job} | {name} | {wallet} credits" + Environment.NewLine;
-           }
-           if (k == 0) {
+            }
+            if (k == 0)
+            {
                 output += "No characters in reserve";
-           }
-           var cm = ChatMessage.Create("[Server]", output, ChatMessageType.Server, null, client);
-           cm.IconStyle = "StoreShoppingCrateIcon";
-           GameMain.Server.SendDirectChatMessage(cm, client);
+            }
+
+            return output;
         }
     }
 }
