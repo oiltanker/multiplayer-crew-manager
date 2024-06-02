@@ -6,14 +6,17 @@ using Barotrauma.Networking;
 
 namespace MultiplayerCrewManager
 {
+    public enum McmLoggingLevel
+    {
+        None = 0,
+        Error = 1,
+        Warning = 2,
+        Info = 3,
+        Trace = 4
+    }
     public class McmConfig
     {
-        public const int LoggingLevel_Trace = 4;
-        public const int LoggingLevel_Info = 3;
-        public const int LoggingLevel_Warn = 2;
-        public const int LoggingLevel_Error = 1;
-        public const int LoggingLevel_None = 0;
-        public int LoggingLevel = LoggingLevel_Info;
+        public McmLoggingLevel LoggingLevel = McmLoggingLevel.Info;
 
         public int ServerUpdateFrequency = 15;
         public bool AllowSpawnNewClients = false;
@@ -67,13 +70,13 @@ namespace MultiplayerCrewManager
         public override string ToString()
         {
             return
-                $"{nameof(LoggingLevel)}: {LoggingLevel},\n " +
-                $"{nameof(ServerUpdateFrequency)}: {ServerUpdateFrequency}s,\n " +
-                $"{nameof(AllowSpawnNewClients)}: {AllowSpawnNewClients},\n " +
-                $"{nameof(SecureEnabled)}: {SecureEnabled},\n " +
-                $"{nameof(MaxTransportTime)}: {MaxTransportTime}s,\n " +
-                $"{nameof(RespawnInterval)}: {RespawnInterval}s,\n " +
-                $"{nameof(AllowRespawn)}: {AllowRespawn},\n " +
+                $"{nameof(AllowRespawn)}: {AllowRespawn}\n" +
+                $"{nameof(AllowSpawnNewClients)}: {AllowSpawnNewClients}\n" +
+                $"{nameof(LoggingLevel)}: {(int)LoggingLevel} - {LoggingLevel}\n" +
+                $"{nameof(MaxTransportTime)}: {MaxTransportTime}s\n" +
+                $"{nameof(RespawnInterval)}: {RespawnInterval}s\n" +
+                $"{nameof(SecureEnabled)}: {SecureEnabled},\n" +
+                $"{nameof(ServerUpdateFrequency)}: {ServerUpdateFrequency}s\n" +
                 $"{nameof(SkillLossPercentageOnDeath)}: {SkillLossPercentageOnDeath}%";
         }
     }

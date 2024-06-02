@@ -8,7 +8,7 @@ namespace MultiplayerCrewManager
         {
             try
             {
-                if (McmMod.GetConfig.LoggingLevel >= McmConfig.LoggingLevel_Trace) //LoggingLevel=4
+                if (McmMod.GetConfig.LoggingLevel >= McmLoggingLevel.Trace) //LoggingLevel=4
                     ModUtils.Logging.PrintMessage($"[TRACE] [MCM] - {msg}");
             }
             catch (System.Exception e)
@@ -21,7 +21,7 @@ namespace MultiplayerCrewManager
         {
             try
             {
-                if (McmMod.GetConfig.LoggingLevel >= McmConfig.LoggingLevel_Info) //LoggingLevel=3
+                if (McmMod.GetConfig.LoggingLevel >= McmLoggingLevel.Info) //LoggingLevel=3
                     ModUtils.Logging.PrintMessage($"[INFO] [MCM] - {msg}");
             }
             catch (System.Exception e)
@@ -34,7 +34,7 @@ namespace MultiplayerCrewManager
         {
             try
             {
-                if (McmMod.GetConfig.LoggingLevel >= McmConfig.LoggingLevel_Warn) //LoggingLevel=2
+                if (McmMod.GetConfig.LoggingLevel >= McmLoggingLevel.Warning) //LoggingLevel=2
                     ModUtils.Logging.PrintWarning($"[WARN] [MCM] - {msg}");
             }
             catch (System.Exception e)
@@ -47,7 +47,7 @@ namespace MultiplayerCrewManager
         {
             try
             {
-                if (McmMod.GetConfig.LoggingLevel >= McmConfig.LoggingLevel_Error) //LoggingLevel=1
+                if (McmMod.GetConfig.LoggingLevel >= McmLoggingLevel.Error) //LoggingLevel=1
                 {
                     ModUtils.Logging.PrintError($"[ERROR] [MCM] - {msg}");
                 }
@@ -62,7 +62,7 @@ namespace MultiplayerCrewManager
         {
             try
             {
-                if (McmMod.GetConfig.LoggingLevel >= McmConfig.LoggingLevel_Error) //LoggingLevel=1
+                if (McmMod.GetConfig.LoggingLevel >= McmLoggingLevel.Error) //LoggingLevel=1
                 {
                     ModUtils.Logging.PrintError($"[ERROR] [MCM] - {msg}, Exception {e.Message}");
                 }
@@ -72,5 +72,6 @@ namespace MultiplayerCrewManager
                 ModUtils.Logging.PrintError(ex.Message);
             }
         }
+        
     }
 }

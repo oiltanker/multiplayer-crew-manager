@@ -1,6 +1,7 @@
 using Barotrauma;
 using Barotrauma.Networking;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -30,22 +31,19 @@ namespace MultiplayerCrewManager
         private static readonly Regex rMaskReleaseId = new Regex(@"^mcm\s+release\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskDelete = new Regex(@"^mcm\s+delete\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static readonly Regex rMaskClientList = new Regex(@"^mcm\s+clientlist\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskSpawn = new Regex(@"^mcm\s+spawn\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex rMaskClientAutospawn = new Regex(@"^mcm\s+client\s+autospawn\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskRespawn = new Regex(@"^mcm\s+respawn\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskConfig = new Regex(@"^mcm\s+config\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnSet = new Regex(@"^mcm\s+respawn\s+set\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskRespawnPenalty = new Regex(@"^mcm\s+respawn\s+penalty\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskRespawnPenalty = new Regex(@"^mcm\s+respawn\s+penalty\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawninterval = new Regex(@"^mcm\s+respawn\s+interval\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnMaxTransportTime = new Regex(@"^mcm\s+respawn\s+maxtransporttime\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskSecure = new Regex(@"^mcm\s+secure\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskSecureEnabled = new Regex(@"^mcm\s+secure\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReserve = new Regex(@"^mcm\s+reserve\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReservePut = new Regex(@"^mcm\s+reserve\s+put\s+\d+\s?(force)?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReserveGet = new Regex(@"^mcm\s+reserve\s+get\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskLoggingLevelSet = new Regex(@"^mcm\slogging\s\d$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskLoggingLevelGet = new Regex(@"^mcm\slogging$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex rMaskIntValue = new Regex(@"\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskBoolValue = new Regex(@"\s+true\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -68,10 +66,6 @@ namespace MultiplayerCrewManager
                 // mcm list
                 case var _ when rMaskList.IsMatch(message):
                     (messageType, response) = ChatList();
-                    break;
-                // mcm clientlist
-                case var _ when rMaskClientList.IsMatch(message):
-                    (messageType, response) = ChatClientList(sender);
                     break;
                 // mcm control <ID>
                 case var _ when rMaskControl.IsMatch(message):
@@ -125,20 +119,14 @@ namespace MultiplayerCrewManager
                     break;
                 case var _ when rMaskRespawnMaxTransportTime.IsMatch(message):
                 {
-                    // mcm respawn shuttletime <number>
-                    (messageType, response) = ChatRespawnShuttleTime(message, sender);
+                    // mcm respawn maxtransporttime <number>
+                    (messageType, response) = ChatMaxTransportTime(message, sender);
                 }
                     break;
-                case var _ when rMaskRespawn.IsMatch(message):
+                case var _ when rMaskConfig.IsMatch(message):
                 {
-                    // mcm respawn
-                    (messageType, response) = ChatRespawn(sender);
-                }
-                    break;
-                case var _ when rMaskSecure.IsMatch(message):
-                {
-                    // mcm secure
-                    (messageType, response) = ChatSecure(sender);
+                    // mcm config
+                    (messageType, response) = ChatConfig(sender);
                 }
                     break;
                 case var _ when rMaskSecureEnabled.IsMatch(message):
@@ -163,12 +151,6 @@ namespace MultiplayerCrewManager
                 {
                     // mcm reserve get <ID>
                     (response, messageType) = ChatReserveGet(message, sender);
-                }
-                    break;
-                case var _ when rMaskLoggingLevelGet.IsMatch(message):
-                {
-                    // mcm logging
-                    (messageType, response) = ChatLogging(sender);
                 }
                     break;
                 case var _ when rMaskLoggingLevelSet.IsMatch(message):
@@ -226,28 +208,10 @@ namespace MultiplayerCrewManager
                         value = 4;
                     if (value < 0)
                         value = 0;
-                    McmMod.Config.LoggingLevel = value;
+                    
+                    McmMod.Config.LoggingLevel = (McmLoggingLevel)value;
                     McmMod.SaveConfig();
-                    string correspondingLoggingLevel = "";
-                    switch (value)
-                    {
-                        case 0:
-                            correspondingLoggingLevel = "None";
-                            break;
-                        case 1:
-                            correspondingLoggingLevel = "Error";
-                            break;
-                        case 2:
-                            correspondingLoggingLevel = "Warn";
-                            break;
-                        case 3:
-                            correspondingLoggingLevel = "Info";
-                            break;
-                        default:
-                            correspondingLoggingLevel = "Trace";
-                            break;
-                    }
-                    response = $"[MCM] - Set logging level to [{correspondingLoggingLevel}]";
+                    response = $"[MCM] - Set logging level to [{(int)McmMod.Config.LoggingLevel} - {McmMod.Config.LoggingLevel}]";
                 }
                 else
                 {
@@ -260,39 +224,7 @@ namespace MultiplayerCrewManager
             return (messageType, response);
         }
 
-        private (ChatMessageType messageType, string response) ChatLogging(Client sender)
-        {
-            ChatMessageType messageType;
-            string response;
-            if (sender.HasPermission(ClientPermissions.ConsoleCommands))
-            {
-                messageType = ChatMessageType.Server;
-                var loggingLevel = McmMod.Config.LoggingLevel;
-                string correspondingLoggingLevel = "";
-                switch (loggingLevel)
-                {
-                    case 0:
-                        correspondingLoggingLevel = "None";
-                        break;
-                    case 1:
-                        correspondingLoggingLevel = "Error";
-                        break;
-                    case 2:
-                        correspondingLoggingLevel = "Warn";
-                        break;
-                    case 3:
-                        correspondingLoggingLevel = "Info";
-                        break;
-                    default:
-                        correspondingLoggingLevel = "Trace";
-                        break;
-                }
-                response = $"[MCM] - Current logging level set to [{correspondingLoggingLevel}]";
-            }
-            else (messageType, response) = SetPrivilegeError();
-
-            return (messageType, response);
-        }
+        
 
         private (string response, ChatMessageType messageType) ChatReserveGet(string message, Client sender)
         {
@@ -360,39 +292,20 @@ namespace MultiplayerCrewManager
 
             return (messageType, response);
         }
-
-        private (ChatMessageType messageType, string response) ChatSecure(Client sender)
+        
+        private (ChatMessageType messageType, string response) ChatConfig(Client sender)
         {
-            ChatMessageType messageType;
-            string response;
-            if (sender.HasPermission(ClientPermissions.ConsoleCommands))
-            {
-                messageType = ChatMessageType.ServerMessageBox;
-                var confStr = new[]{
-                    ("Secure Mode", $"{McmMod.Config.SecureEnabled}")
-                }.Select(s => $"\n— {s.Item1}:    {s.Item2}").Aggregate((s1, s2) => $"{s1}{s2}");
-                response = $"Secure Mode:{confStr}";
-            }
-            else (messageType, response) = SetPrivilegeError();
-
+            var messageType = ChatMessageType.ServerMessageBox;
+            var response = @"
+--------------------------------------------
+-------------MCM Configuration--------------
+--------------------------------------------" +
+                           $"\n\n{McmMod.Config.ToString()}";
+            
             return (messageType, response);
         }
 
-        private (ChatMessageType messageType, string response) ChatRespawn(Client sender)
-        {
-            ChatMessageType messageType;
-            string response;
-            if (sender.HasPermission(ClientPermissions.ConsoleCommands))
-            {
-                messageType = ChatMessageType.ServerMessageBox;
-                response = $"Respawn Config:\n{McmMod.Config.ToString()}";
-            }
-            else (messageType, response) = SetPrivilegeError();
-
-            return (messageType, response);
-        }
-
-        private (ChatMessageType messageType, string response) ChatRespawnShuttleTime(string message, Client sender)
+        private (ChatMessageType messageType, string response) ChatMaxTransportTime(string message, Client sender)
         {
             ChatMessageType messageType;
             string response;
@@ -591,33 +504,60 @@ namespace MultiplayerCrewManager
             return (messageType, null);
         }
 
-        private (ChatMessageType messageType, string response) ChatClientList(Client sender)
-        {
-            if (sender.HasPermission(ClientPermissions.ConsoleCommands))
-            {
-                var response = "Current clients";
-                foreach (var client in Client.ClientList)
-                    response += $"\n  {client.CharacterID} | {client.SteamID} - {client.Name}";
-                return (ChatMessageType.ServerMessageBox, response);
-            }
-            return SetPrivilegeError();
-
-        }
-
         private (ChatMessageType messageType, string response) ChatList()
         {
             if (McmMod.IsRunning)
             {
-                var response = "Controllable characters:";
-                foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead))
-                {
-                    // Team1, meaning default crew
-                    response += $"\n{character.ID} / {character.TeamID.ToString("G")} / {character.SpeciesName} / {character.IsBot} | {character.Name} ({character.DisplayName})";
-                }
-                return (ChatMessageType.ServerMessageBox, response);
+                var response = StringifyAllCharacters();
+                return (ChatMessageType.Server, response);
             }
             
             return SetInGameError();
+        }
+
+        private static string StringifyAllCharacters()
+        {
+            HashSet<Character> displayedCharacters = new HashSet<Character>();
+
+            // Humans
+            var response = "-= Clients and NPCs =-\n";
+            foreach (var client in Client.ClientList)
+            {
+                response += $"{Stringify(client)}\n";
+                if(client.Character != null)
+                    displayedCharacters.Add(client.Character);
+            }
+
+            // Bots. We only mention the ones in the Team 1, to avoid station's NPCs
+            foreach (Character character in Character.CharacterList)
+            {
+                if (!displayedCharacters.Contains(character) && character.TeamID == CharacterTeamType.Team1)
+                {
+                    response += $"{Stringify(character)}\n";
+                }
+            }
+
+            return response;
+        }
+
+        private static string Stringify(Client client)
+        {
+            var character = client.Character;
+            string response = string.Empty;
+            if (character != null)
+                response += Stringify(character);
+            
+            response += $"| {client.SteamID} - {client.Name}";
+
+            return response;
+        }
+
+        private static string Stringify(Character character)
+        {
+            return $"{character.ID} " +
+                   $"/ {(character.IsDead ? "Dead" : "Alive")} {GetCharacterType(character)} " +
+                   $"| {character.Name} " +
+                   $"({character.DisplayName}) ";
         }
 
         private (ChatMessageType, string) SetPrivilegeError()
@@ -630,38 +570,62 @@ namespace MultiplayerCrewManager
             return (ChatMessageType.Error, "[MCM] Command can be used only in game and multiplayer campaign");
         }
 
+        /// <summary>
+        /// Extracted from BarotraumaShared\SharedSource\Characters\Character.cs
+        /// </summary>
+        /// <param name="character"></param>
+        /// <returns></returns>
+        public static string GetCharacterType(Character character)
+        {
+            if (character.IsPlayer)
+                return "Player";
+            else if (character.AIController is EnemyAIController)
+                return "Enemy" + character.SpeciesName;
+            else if (character.AIController is HumanAIController && character.TeamID == CharacterTeamType.Team2)
+                return "EnemyHuman";
+            else if (character.Info != null && character.TeamID == CharacterTeamType.Team1)
+                return "AICrew";
+            else if (character.Info != null && character.TeamID == CharacterTeamType.FriendlyNPC)
+                return "FriendlyNPC";
+            return "Unknown";
+        }
+
         private static (ChatMessageType Server, string response) ChatHelp(Client sender)
         {
             var response = @"
-mcm [function] [args] - mcm Function syntax
+--------------------------------------------
+--------Multiplayer Crew Manager-------
+--------------------------------------------
+usage: mcm [function] [args]
+    [arg] = optional parameter
+    <arg> = mandatory parameter
 
-— mcm [help] - show help for mcm function (help keyword is optional)
-— mcm list - list all controllable characters
-— mcm control <ID> - try gain control of character with provided ID (only for admins/moderators if SM enabled)
-— mcm release [ID] - release currently controlled character or character with ID, if provided (later only for admins/moderators)
+—mcm [help] - show help for mcm functions
+—mcm list - list all controllable characters
+—mcm control <ID> - gain control of specific character
+—mcm release - release current controlled character
+—mcm config - Display current settings
 ";
             if (sender.HasPermission(ClientPermissions.ConsoleCommands)) response += @"
 
-admin/moderator only commands
+---------Admins & Moderators only---------
 
-— mcm delete <ID> - delete character (with inventory) with provided ID
-— mcm clientlist - list all the clients
-— mcm spawn <ID> - spawn unique client character (his cosmetic presets)
-— mcm client autospawn <true/false> - trun automatic spawning for new connected clients on/off
+—mcm spawn <ID> - spawn client character
+—mcm delete <ID> - delete character (with inventory)
+—mcm client autospawn <true/false> - automatic spawning for new clients
+—mcm release <ID> - release controlled character back to AI
 
-— mcm respawn - list respawn config
-— mcm respawn set <true/false> - turn respawning on/off
-— mcm respawn penalty <percentage> - set respawning penalty. Disabled if inferior or equal to 0
-— mcm respawn interval <number> - time to wait before respawning
-— mcm respawn shuttletime <number> - time that respawnees have to catch up with the main sub
-— mcm secure - show the current secure mode status
-— mcm secure <true/false> - secure mode to allow only admins/moderators to gain control on/off
+—mcm respawn set <true/false> - turn respawning on/off
+—mcm respawn penalty <number> - set respawning penalty percentage. Disabled if <=0
+—mcm respawn interval <number> - time to wait before respawning
+—mcm respawn maxtransporttime <number> - respawn shuttle time to catch up with the main sub
 
-- mcm reserve - show characters stocked in reserve
-- mcm reserve put <ID> - put character in reserve with provided ID
-- mcm reserve get <ID> - get character from reserve with provided ID
-- mcm logging - Gets the current logging level
-- mcm logging <0-4> sets the current logging level (0 - None, 1 - Error, 2 - Warn, 3 - Info, 4 - Trace)
+-mcm reserve - show characters stocked in reserve
+-mcm reserve put <ID> - put character in reserve
+-mcm reserve get <ID> - get character from reserve
+
+-mcm logging <0-4> sets logging level (0 - None, 1 - Error, 2 - Warn, 3 - Info, 4 - Trace)
+—mcm secure <true/false> - allow only admins/moderators to gain control
 ";
             return (ChatMessageType.ServerMessageBox, response);
         }
