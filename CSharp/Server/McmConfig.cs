@@ -1,24 +1,84 @@
 using System;
+using System.Reflection;
 using System.Xml.Serialization;
 using Barotrauma;
+using Barotrauma.Networking;
 
 namespace MultiplayerCrewManager
 {
+    public enum McmLoggingLevel
+    {
+        None = 0,
+        Error = 1,
+        Warning = 2,
+        Info = 3,
+        Trace = 4
+    }
     public class McmConfig
     {
-        public const int LoggingLevel_Trace = 4;
-        public const int LoggingLevel_Info = 3;
-        public const int LoggingLevel_Warn = 2;
-        public const int LoggingLevel_Error = 1;
-        public const int LoggingLevel_None = 0;
-        public int LoggingLevel = LoggingLevel_Info;
+        public McmLoggingLevel LoggingLevel = McmLoggingLevel.Info;
 
         public int ServerUpdateFrequency = 15;
         public bool AllowSpawnNewClients = false;
         public bool SecureEnabled = false;
-        public float RespawnDelay = 5;
+        //public float RespawnDelay = 5;
 
-        public McmConfig() { }
+        private readonly PropertyInfo maxTransportTime;
+        private readonly PropertyInfo respawnInterval;
+        private readonly PropertyInfo skillLossPercentageOnDeath;
+
+        public McmConfig()
+        {
+            maxTransportTime = typeof(ServerSettings).GetProperty("MaxTransportTime");
+            if (maxTransportTime is null)
+                throw new ApplicationException($"{typeof(McmConfig)} constructor. Could not perform GetProperty on ServerSettings.MaxTransportTime");
+
+            respawnInterval = typeof(ServerSettings).GetProperty("RespawnInterval");
+            if (respawnInterval is null)
+                throw new ApplicationException($"{typeof(McmConfig)} constructor. Could not perform GetProperty on ServerSettings.RespawnInterval");
+
+            skillLossPercentageOnDeath = typeof(ServerSettings).GetProperty("SkillLossPercentageOnDeath");
+            if (skillLossPercentageOnDeath is null)
+                throw new ApplicationException($"{typeof(McmConfig)} constructor. Could not perform GetProperty on ServerSettings.RespawnInterval");
+
+        }
+
+        public float MaxTransportTime
+        {
+            get => GameMain.Server.ServerSettings.MaxTransportTime;
+            set => maxTransportTime.SetValue(GameMain.Server.ServerSettings, value);
+        }
+
+        public float RespawnInterval
+        {
+            get => GameMain.Server.ServerSettings.RespawnInterval;
+            set => respawnInterval.SetValue(GameMain.Server.ServerSettings, value);
+        }
+
+        public bool AllowRespawn
+        {
+            get => GameMain.Server.ServerSettings.AllowRespawn;
+            set => GameMain.Server.ServerSettings.AllowRespawn = value;
+        }
+
+        public float SkillLossPercentageOnDeath
+        {
+            get => GameMain.Server.ServerSettings.SkillLossPercentageOnDeath;
+            set => skillLossPercentageOnDeath.SetValue(GameMain.Server.ServerSettings, value);
+        }
+
+        public override string ToString()
+        {
+            return
+                $"{nameof(AllowRespawn)}: {AllowRespawn}\n" +
+                $"{nameof(AllowSpawnNewClients)}: {AllowSpawnNewClients}\n" +
+                $"{nameof(LoggingLevel)}: {(int)LoggingLevel} - {LoggingLevel}\n" +
+                $"{nameof(MaxTransportTime)}: {MaxTransportTime}s\n" +
+                $"{nameof(RespawnInterval)}: {RespawnInterval}s\n" +
+                $"{nameof(SecureEnabled)}: {SecureEnabled},\n" +
+                $"{nameof(ServerUpdateFrequency)}: {ServerUpdateFrequency}s\n" +
+                $"{nameof(SkillLossPercentageOnDeath)}: {SkillLossPercentageOnDeath}%";
+        }
     }
 
     partial class McmMod
@@ -47,7 +107,7 @@ namespace MultiplayerCrewManager
                     using (var fstream = System.IO.File.OpenRead(cfgFilePath))
                     {
                         Config = (McmConfig)serializer.Deserialize(fstream);
-                        McmUtils.Trace($"Loaded config file:\n   [LoggingLevel={Config.LoggingLevel}]\n   [ServerUpdateFrequency={Config.ServerUpdateFrequency}]\n   [AllowSpawnNewClients={Config.AllowSpawnNewClients}]\n   [SecureEnabled={Config.SecureEnabled}]\n   [RespawnDelay={Config.RespawnDelay}]");
+                        McmUtils.Trace($"Loaded config file:\n   [{Config.ToString()}]");
                     }
                 }
                 else

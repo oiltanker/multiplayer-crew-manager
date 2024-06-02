@@ -48,7 +48,6 @@ namespace MultiplayerCrewManager
         private int counter = 0;
         private double respawnTimeBegin = 0; // from LuaCsTimer.Time
         private double respawnTimer = 0; // difference
-        private double respawnTimerForce = 0;
         private MethodInfo resetShuttleMethod = typeof(RespawnManager).GetMethod("ResetShuttle", BindingFlags.Instance | BindingFlags.NonPublic);
         private MethodInfo giveAfflictionMethod = typeof(RespawnManager).GetMethod("GiveRespawnPenaltyAffliction", BindingFlags.Static | BindingFlags.Public);
 
@@ -78,7 +77,7 @@ namespace MultiplayerCrewManager
         public void ReduceCharacterSkills(CharacterInfo charInfo)
         {
             if (charInfo.Job == null) return;
-            var skillLoss = GameMain.Server.ServerSettings.SkillLossPercentageOnDeath;
+            var skillLoss = McmMod.Config.SkillLossPercentageOnDeath;
             var convertedToScalar = 1f - (skillLoss / 100);
             foreach (var skill in charInfo.Job.GetSkills())
             {
@@ -192,18 +191,17 @@ namespace MultiplayerCrewManager
             // do respawn
             if (respawnTimeBegin != 0 && LuaCsTimer.Time - respawnTimer >= respawnTimeBegin)
             {
-                if (TryRespawn(LuaCsTimer.Time - respawnTimerForce > respawnTimeBegin))
+                if (TryRespawn(LuaCsTimer.Time - respawnTimer > respawnTimeBegin))
                 {
                     // reset respawn state
                     respawnTimeBegin = 0;
                     respawnTimer = 0;
-                    respawnTimerForce = 0;
                     Awaiting.Clear();
                 }
                 else
                 {
                     // post-pone respawn
-                    respawnTimer += McmMod.Config.RespawnDelay;
+                    respawnTimer += McmMod.Config.RespawnInterval;
                 }
             }
             // update dead characters awaiting respawn
@@ -212,8 +210,7 @@ namespace MultiplayerCrewManager
             if (Awaiting.Count > 0 && respawnTimeBegin == 0)
             {
                 respawnTimeBegin = LuaCsTimer.Time;
-                respawnTimer = McmMod.Config.RespawnDelay;
-                respawnTimerForce = GameMain.Server.ServerSettings.RespawnInterval; //McmMod.Config.RespawnTime;
+                respawnTimer = McmMod.Config.RespawnInterval;
             }
         }
 

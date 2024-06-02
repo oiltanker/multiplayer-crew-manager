@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Barotrauma;
 using Barotrauma.IO;
 using Barotrauma.Networking;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MultiplayerCrewManager
 {
@@ -130,9 +131,9 @@ namespace MultiplayerCrewManager
             // Get xml body from the file
             XDocument xmlFile = XDocument.Load(reserveFilepath);
             // Check if character was written in file before
-            var nameCheck = xmlFile.Descendants("CharacterCampaignData").Where(elem => (string)elem.Attribute("name") == $"{character.Info.Name}").FirstOrDefault();
+            var nameCheck = xmlFile.Descendants("CharacterCampaignData").FirstOrDefault(elem => (string)elem.Attribute("name") == $"{character.Info.Name}");
             if (nameCheck != null) {
-                if (isForce == false) {
+                if (!isForce) {
                     msg = $"[MCM] Character with name '{character.Info.Name}' is already saved in reserve. If you want to overwrite character data add 'force' keyword to the end of mcm command expression.";
                     sendChatMsg(msg: msg, messageType: ChatMessageType.Error, client: client);
                     return;
@@ -152,7 +153,7 @@ namespace MultiplayerCrewManager
             // Grab inventory data from the character as xml element
             XElement characterInventoryData = new XElement("inventory");
             Barotrauma.Character.SaveInventory(character.Inventory, characterInventoryData);
-            // Grab helath data from the character as xml element
+            // Grab health data from the character as xml element
             XElement characterHealthData = new XElement("health");
             character.CharacterHealth.Save(characterHealthData);
             character.Info.Save(CharacterCampaignData); // Character (appearance, job, skills, talents, etc)
@@ -167,6 +168,7 @@ namespace MultiplayerCrewManager
             sendMsgToBoth(msg: msg, messageType: ChatMessageType.Error, client: client);
             // Remove the character from the current game session (also from campaign too)
             Entity.Spawner.AddEntityToRemoveQueue(character);
+            GameMain.GameSession.CrewManager.RemoveCharacter(character, true, true);
         }
 
         /// <summary>
@@ -219,24 +221,33 @@ namespace MultiplayerCrewManager
         /// </summary>
         /// <param name="client">
         /// </param>
-        public static void showReserveList(Client client) 
+        public static void showReserveList(Client client)
         {
-           ushort k = 0;
-           XDocument xmlFile = XDocument.Load(reserveFilepath);
-           string output = "-= Crew reserve list =-" + Environment.NewLine;
-           foreach(var CCD in xmlFile.Descendants("CharacterCampaignData")) {
+            var output = ToString();
+            var cm = ChatMessage.Create("[Server]", output, ChatMessageType.Server, null, client);
+           cm.IconStyle = "StoreShoppingCrateIcon";
+           GameMain.Server.SendDirectChatMessage(cm, client);
+        }
+
+        public new static string ToString()
+        {
+            ushort k = 0;
+            XDocument xmlFile = XDocument.Load(reserveFilepath);
+            string output = "-= Crew reserve list =-" + Environment.NewLine;
+            foreach (var CCD in xmlFile.Descendants("CharacterCampaignData"))
+            {
                 k++;
                 string name = CCD.Attribute("name").Value;
                 string job = CCD.Element("Character").Element("job").Attribute("name").Value;
                 string wallet = CCD.Element("Wallet").Attribute("balance").Value;
                 output += $"#{k} | {job} | {name} | {wallet} credits" + Environment.NewLine;
-           }
-           if (k == 0) {
+            }
+            if (k == 0)
+            {
                 output += "No characters in reserve";
-           }
-           var cm = ChatMessage.Create("[Server]", output, ChatMessageType.Server, null, client);
-           cm.IconStyle = "StoreShoppingCrateIcon";
-           GameMain.Server.SendDirectChatMessage(cm, client);
+            }
+
+            return output;
         }
     }
 }
