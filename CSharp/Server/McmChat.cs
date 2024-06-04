@@ -546,6 +546,8 @@ namespace MultiplayerCrewManager
             string response = string.Empty;
             if (character != null)
                 response += Stringify(character);
+            else
+                response += $"Spectator / use 'mcm spawn {client.CharacterID}' "; 
             
             response += $"| {client.SteamID} - {client.Name}";
 
