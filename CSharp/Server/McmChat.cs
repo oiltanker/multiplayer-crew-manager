@@ -386,7 +386,7 @@ namespace MultiplayerCrewManager
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int clientId);
 
                     messageType = ChatMessageType.Error;
-                    var client = Client.ClientList.FirstOrDefault(c => clientId == c.Character.ID);
+                    var client = Client.ClientList.FirstOrDefault(c => clientId == c.Character.ID || clientId == c.NameId);
                     if (client != null)
                     {
                         if (Mod.TryCeateClientCharacter(client))
@@ -547,7 +547,7 @@ namespace MultiplayerCrewManager
             if (character != null)
                 response += Stringify(character);
             else
-                response += $"Spectator / use 'mcm spawn {client.CharacterID}' "; 
+                response += $"Spectator / use 'mcm spawn {client.NameId}' "; 
             
             response += $"| {client.SteamID} - {client.Name}";
 
