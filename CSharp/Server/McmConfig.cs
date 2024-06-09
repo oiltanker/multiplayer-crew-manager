@@ -19,7 +19,7 @@ namespace MultiplayerCrewManager
         public McmLoggingLevel LoggingLevel = McmLoggingLevel.Info;
 
         public int ServerUpdateFrequency = 15;
-        public bool AllowSpawnNewClients = false;
+        public bool AutoSpawn = false;
         public bool SecureEnabled = false;
         //public float RespawnDelay = 5;
 
@@ -55,13 +55,13 @@ namespace MultiplayerCrewManager
             set => respawnInterval.SetValue(GameMain.Server.ServerSettings, value);
         }
 
-        public bool AllowRespawn
+        public bool RespawnAllowed
         {
             get => GameMain.Server.ServerSettings.AllowRespawn;
             set => GameMain.Server.ServerSettings.AllowRespawn = value;
         }
 
-        public float SkillLossPercentageOnDeath
+        public float RespawnPenalty
         {
             get => GameMain.Server.ServerSettings.SkillLossPercentageOnDeath;
             set => skillLossPercentageOnDeath.SetValue(GameMain.Server.ServerSettings, value);
@@ -70,14 +70,16 @@ namespace MultiplayerCrewManager
         public override string ToString()
         {
             return
-                $"{nameof(AllowRespawn)}: {AllowRespawn}\n" +
-                $"{nameof(AllowSpawnNewClients)}: {AllowSpawnNewClients}\n" +
-                $"{nameof(LoggingLevel)}: {(int)LoggingLevel} - {LoggingLevel}\n" +
-                $"{nameof(MaxTransportTime)}: {MaxTransportTime}s\n" +
+                $"New Clients {nameof(AutoSpawn)}: {AutoSpawn}\n" +
+                $"{nameof(RespawnAllowed)}: {RespawnAllowed}\n" +
                 $"{nameof(RespawnInterval)}: {RespawnInterval}s\n" +
+                $"{nameof(RespawnPenalty)}: {RespawnPenalty}\n" +
+                $"Shuttle {nameof(MaxTransportTime)}: {MaxTransportTime}s\n" +
+                "---------------------------\n" +
                 $"{nameof(SecureEnabled)}: {SecureEnabled},\n" +
-                $"{nameof(ServerUpdateFrequency)}: {ServerUpdateFrequency}s\n" +
-                $"{nameof(SkillLossPercentageOnDeath)}: {SkillLossPercentageOnDeath}%";
+                $"{nameof(LoggingLevel)}: {(int)LoggingLevel} - {LoggingLevel}\n" +
+                $"{nameof(ServerUpdateFrequency)}: {ServerUpdateFrequency}s";
+
         }
     }
 

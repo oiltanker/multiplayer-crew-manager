@@ -348,7 +348,7 @@ namespace MultiplayerCrewManager
                     client.SpectateOnly = true;
                     McmUtils.Info($"New client - {client.CharacterID} | '{client.Name}'");
                     // if spawning is enabled then check if spawn is needed
-                    if (McmMod.Config.AllowSpawnNewClients && client.InGame && client.Character == null)
+                    if (McmMod.Config.AutoSpawn && client.InGame && client.Character == null)
                     {
                         var character = Character.CharacterList.FirstOrDefault(c => c.TeamID == CharacterTeamType.Team1 && c.Name == client.Name);
                         if (character != null && !Manager.IsCurrentlyControlled(character)) Manager.Set(client, character);

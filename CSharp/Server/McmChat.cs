@@ -33,7 +33,7 @@ namespace MultiplayerCrewManager
 
         private static readonly Regex rMaskSpawn = new Regex(@"^mcm\s+spawn\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static readonly Regex rMaskClientAutospawn = new Regex(@"^mcm\s+client\s+autospawn\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskAutospawn = new Regex(@"^mcm\s+autospawn\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskConfig = new Regex(@"^mcm\s+config\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnSet = new Regex(@"^mcm\s+respawn\s+set\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnPenalty = new Regex(@"^mcm\s+respawn\s+penalty\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -93,7 +93,7 @@ namespace MultiplayerCrewManager
                     (messageType, response) = ChatSpawnId(message, sender);
                 }
                     break;
-                case var _ when rMaskClientAutospawn.IsMatch(message):
+                case var _ when rMaskAutospawn.IsMatch(message):
                 {
                     // mcm client autospawn
                     (messageType, response) = ChatAutospawn(message, sender);
@@ -185,7 +185,7 @@ namespace MultiplayerCrewManager
                 messageType = ChatMessageType.Server;
                 Int32.TryParse(rMaskIntValue.Match(message).Value, out int penalty);
                 response = $"[MCM] Respawn penalty is set to {penalty}%";
-                McmMod.Config.SkillLossPercentageOnDeath = Math.Max((float)penalty, 0);
+                McmMod.Config.RespawnPenalty = Math.Max((float)penalty, 0);
                 McmMod.SaveConfig();
             }
             else (messageType, response) = SetPrivilegeError();
@@ -349,7 +349,7 @@ namespace MultiplayerCrewManager
                 Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
                 if (value) response = "[MCM] Respawning is turned ON";
                 else response = "[MCM] Respawning is turned OFF";
-                McmMod.Config.AllowRespawn = value;
+                McmMod.Config.RespawnAllowed = value;
                 McmMod.SaveConfig();
             }
             else (messageType, response) = SetPrivilegeError();
@@ -367,7 +367,7 @@ namespace MultiplayerCrewManager
                 Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
                 if (value) response = "[MCM] Automatic new client character spawn is turned ON";
                 else response = "[MCM] Automatic new client character spawn is turned OFF";
-                McmMod.Config.AllowSpawnNewClients = value;
+                McmMod.Config.AutoSpawn = value;
                 McmMod.SaveConfig();
             }
             else (messageType, response) = SetPrivilegeError();
@@ -614,7 +614,7 @@ usage: mcm [function] [args]
 
 —mcm spawn <ID> - spawn client character
 —mcm delete <ID> - delete character (with inventory)
-—mcm client autospawn <true/false> - automatic spawning for new clients
+—mcm autospawn <true/false> - automatic spawning for new clients
 —mcm release <ID> - release controlled character back to AI
 
 —mcm respawn set <true/false> - turn respawning on/off
