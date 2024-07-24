@@ -21,7 +21,7 @@ namespace MultiplayerCrewManager
         public McmLoggingLevel LoggingLevel = McmLoggingLevel.Info;
 
         public int ServerUpdateFrequency = 15;
-        public bool AutoSpawn = false;
+        public bool AutoSpawn = true;
         public bool SecureEnabled = false;
         //public float RespawnDelay = 5;
 
