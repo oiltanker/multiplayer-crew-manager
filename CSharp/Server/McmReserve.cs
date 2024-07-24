@@ -6,7 +6,6 @@ using System.Xml.Linq;
 using Barotrauma;
 using Barotrauma.IO;
 using Barotrauma.Networking;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MultiplayerCrewManager
 {

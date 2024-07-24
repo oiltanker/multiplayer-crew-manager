@@ -388,7 +388,7 @@ namespace MultiplayerCrewManager
             var messageType = ChatMessageType.ServerMessageBox;
             var response = @"
 --------------------------------------------
--------------MCM Configuration--------------
+-------------MCM Configuration-----------
 --------------------------------------------" +
                            $"\n\n{McmMod.Config.ToString()}";
             
@@ -636,9 +636,11 @@ namespace MultiplayerCrewManager
             string response = string.Empty;
             if (character != null)
                 response += Stringify(character);
-            else
+            else if (client.NameId != 0)
                 response += $"Spectator / use 'mcm spawn {client.NameId}' "; 
-            
+            else
+                response += $"Player in Lobby";
+
             response += $"| {client.SteamID} - {client.Name}";
 
             return response;
@@ -711,7 +713,7 @@ usage: mcm [function] [args]
 —mcm respawn penalty <number> - set respawning penalty percentage. Disabled if <=0
 —mcm respawn interval <number> - time to wait before respawning
 
--mcm useshuttle <true/false> - set whether to use a shuttle
+—mcm useshuttle <true/false> - set whether to use a shuttle
 —mcm shuttle <shuttleName> - use the given shuttle for respawn
 —mcm shuttle maxtransporttime <number> - respawn shuttle time to catch up with the main sub
 —mcm shuttles - list of available shuttles

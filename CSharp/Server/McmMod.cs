@@ -13,12 +13,11 @@ namespace MultiplayerCrewManager
 {
     partial class McmMod
     {
-        private GameServer server = GameMain.Server;
         private FieldInfo endRoundTimerFiled = typeof(GameServer).GetField("endRoundTimer", BindingFlags.Instance | BindingFlags.NonPublic);
         private float endRoundTimer
         {
-            get => (endRoundTimerFiled.GetValue(server) as float?).Value;
-            set => endRoundTimerFiled.SetValue(server, value);
+            get => (endRoundTimerFiled.GetValue(GameMain.Server) as float?).Value;
+            set => endRoundTimerFiled.SetValue(GameMain.Server, value);
         }
         protected Action UpdateAction = null;
 
@@ -181,9 +180,9 @@ namespace MultiplayerCrewManager
                     }
 
 
-                    if ((instance as GameServer) != server)
+                    if ((instance as GameServer) != GameMain.Server)
                     {
-                        server = instance as GameServer;
+                        GameMain.Server = instance as GameServer;
                     }
 
                     if (endRoundTimer > 0.0f)

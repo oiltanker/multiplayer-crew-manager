@@ -11,11 +11,9 @@ namespace MultiplayerCrewManager
     partial class McmSession
     {
         private bool AllowMissionEnd;
-        public GameSession Session { get; private set; }
 
         public McmSession(GameSession session)
         {
-            Session = session;
             AllowMissionEnd = true;
         }
 
