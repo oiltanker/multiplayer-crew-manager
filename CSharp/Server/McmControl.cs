@@ -77,7 +77,7 @@ namespace MultiplayerCrewManager
         public void ReduceCharacterSkills(CharacterInfo charInfo)
         {
             if (charInfo.Job == null) return;
-            var skillLoss = McmMod.Config.SkillLossPercentageOnDeath;
+            var skillLoss = McmMod.Config.RespawnPenalty;
             var convertedToScalar = 1f - (skillLoss / 100);
             foreach (var skill in charInfo.Job.GetSkills())
             {
