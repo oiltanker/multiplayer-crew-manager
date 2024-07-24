@@ -36,7 +36,7 @@ namespace MultiplayerCrewManager
         #region Respawn
         private static readonly Regex rMaskSpawn = new Regex(@"^mcm\s+spawn\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskAutospawn = new Regex(@"^mcm\s+autospawn\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskRespawnSet = new Regex(@"^mcm\s+respawn\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskRespawnMode = new Regex(@"^mcm\s+respawnmode\s+\d\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnPenalty = new Regex(@"^mcm\s+respawn\s+penalty\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawninterval = new Regex(@"^mcm\s+respawn\s+interval\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         #endregion
@@ -115,7 +115,7 @@ namespace MultiplayerCrewManager
                     (messageType, response) = ChatAutospawn(message, sender);
                 }
                     break;
-                case var _ when rMaskRespawnSet.IsMatch(message):
+                case var _ when rMaskRespawnMode.IsMatch(message):
                 {
                     // mcm respawn set <true/false> 
                     (messageType, response) = ChatRespawnSet(message, sender);
@@ -436,11 +436,14 @@ namespace MultiplayerCrewManager
             if (sender.HasPermission(ClientPermissions.ConsoleCommands))
             {
                 messageType = ChatMessageType.Server;
-                Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
-                if (value) response = "[MCM] Respawning is turned ON";
-                else response = "[MCM] Respawning is turned OFF";
-                McmMod.Config.RespawnAllowed = value;
+                string intAsString = rMaskIntValue.Match(message).Value;
+
+                if(!Enum.TryParse(intAsString, out RespawnMode respawnMode))
+                    return (messageType, $"Could not parse {intAsString} as a valid RespawnMode");
+
+                McmMod.Config.RespawnMode = respawnMode;
                 McmMod.SaveConfig();
+                response = $"[MCM] RespawnMode set to {respawnMode}. It will be effective at next round.";
             }
             else (messageType, response) = SetPrivilegeError();
 
@@ -709,13 +712,13 @@ usage: mcm [function] [args]
 —mcm autospawn <true/false> - automatic spawning for new clients
 —mcm release <ID> - release controlled character back to AI
 
-—mcm respawn <true/false> - turn respawning on/off
+—mcm respawnmode <0/1/2> - turn respawn mode to (0 - MidRound, 1 - BetweenRounds, 2 - Permadeath. Effective at next round.
 —mcm respawn penalty <number> - set respawning penalty percentage. Disabled if <=0
 —mcm respawn interval <number> - time to wait before respawning
 
-—mcm useshuttle <true/false> - set whether to use a shuttle
-—mcm shuttle <shuttleName> - use the given shuttle for respawn
-—mcm shuttle maxtransporttime <number> - respawn shuttle time to catch up with the main sub
+—mcm useshuttle <true/false> - set whether to use a shuttle. Effective at next round.
+—mcm shuttle <shuttleName> - use the given shuttle for respawn. Effective at next round.
+—mcm shuttle maxtransporttime <number> - respawn shuttle time to catch up with the main sub. Effective at next round.
 —mcm shuttles - list of available shuttles
 
 

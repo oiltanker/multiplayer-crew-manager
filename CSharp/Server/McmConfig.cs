@@ -21,7 +21,7 @@ namespace MultiplayerCrewManager
         public McmLoggingLevel LoggingLevel = McmLoggingLevel.Info;
 
         public int ServerUpdateFrequency = 15;
-        public bool AutoSpawn = false;
+        public bool AutoSpawn = true;
         public bool SecureEnabled = false;
         //public float RespawnDelay = 5;
 
@@ -63,10 +63,10 @@ namespace MultiplayerCrewManager
             set => respawnInterval.SetValue(GameMain.Server.ServerSettings, value);
         }
 
-        public bool RespawnAllowed
+        public RespawnMode RespawnMode
         {
-            get => GameMain.Server.ServerSettings.AllowRespawn;
-            set => GameMain.Server.ServerSettings.AllowRespawn = value;
+            get => GameMain.Server.ServerSettings.RespawnMode;
+            set => GameMain.Server.ServerSettings.RespawnMode = value;
         }
 
         public float RespawnPenalty
@@ -133,13 +133,13 @@ namespace MultiplayerCrewManager
         {
             return
                 $"New Clients {nameof(AutoSpawn)}: {AutoSpawn}\n" +
-                $"{nameof(RespawnAllowed)}: {RespawnAllowed}\n" +
+                $"{nameof(RespawnMode)}: {RespawnMode}\n" +
                 $"{nameof(RespawnInterval)}: {RespawnInterval}s\n" +
                 $"{nameof(RespawnPenalty)}: {RespawnPenalty}\n" +
                 "---------------------------\n" +
                 $"{nameof(UseShuttle)}: {UseShuttle}\n" +
                 $"{nameof(RespawnShuttle)}: {RespawnShuttle}\n" +
-                $"Shuttle {nameof(ShuttleTransportTime)}: {ShuttleTransportTime}s\n" +
+                $"{nameof(ShuttleTransportTime)}: {ShuttleTransportTime}s\n" +
                 "---------------------------\n" +
                 $"{nameof(SecureEnabled)}: {SecureEnabled},\n" +
                 $"{nameof(LoggingLevel)}: {(int)LoggingLevel} - {LoggingLevel}\n" +

@@ -219,7 +219,7 @@ namespace MultiplayerCrewManager
             if (!McmMod.IsCampaign) return null;
             if (RespawnManager != self) RespawnManager = self;
 
-            if (GameMain.Server.ServerSettings.AllowRespawn)
+            if (McmMod.Config.RespawnMode == RespawnMode.MidRound)
             {
                 counter--;
                 if (counter <= 0)
