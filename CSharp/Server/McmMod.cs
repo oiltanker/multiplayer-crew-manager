@@ -13,13 +13,14 @@ namespace MultiplayerCrewManager
 {
     partial class McmMod
     {
-        private GameServer server = GameMain.Server;
-        private FieldInfo endRoundTimerFiled = typeof(GameServer).GetField("endRoundTimer", BindingFlags.Instance | BindingFlags.NonPublic);
-        private float endRoundTimer
+        private PropertyInfo endRoundTimerProperty = typeof(GameServer).GetProperty("EndRoundTimer");
+        private float EndRoundTimer
         {
-            get => (endRoundTimerFiled.GetValue(server) as float?).Value;
-            set => endRoundTimerFiled.SetValue(server, value);
+            get => GameMain.Server.EndRoundTimer;
+            
+            set => endRoundTimerProperty.SetValue(GameMain.Server, value);
         }
+
         protected Action UpdateAction = null;
 
         public McmClientManager Manager { get; private set; }
@@ -175,30 +176,30 @@ namespace MultiplayerCrewManager
                         return null;
                     }
 
-                    if (false == GameMain.Server.ServerSettings.AllowRespawn)
+                    if (McmMod.Config.RespawnMode!= RespawnMode.MidRound)
                     {
                         return null;
                     }
 
 
-                    if ((instance as GameServer) != server)
+                    if ((instance as GameServer) != GameMain.Server)
                     {
-                        server = instance as GameServer;
+                        GameMain.Server = instance as GameServer;
                     }
 
-                    if (endRoundTimer > 0.0f)
+                    if (GameMain.Server.EndRoundTimer > 0.0f)
                     {
-                        McmUtils.Trace($"Endround Timer [{endRoundTimer}]");
+                        McmUtils.Trace($"Endround Timer [{EndRoundTimer}]");
 
                         var alliedChars = Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1);
                         if (alliedChars.Any(c => false == c.IsDead || false == c.IsIncapacitated))
                         {
-                            endRoundTimer = -5.0f;
-                            McmUtils.Trace($"There are still alive characters in team, setting new end round timer [{endRoundTimer}]");
+                            EndRoundTimer = -5.0f;
+                            McmUtils.Trace($"There are still alive characters in team, setting new end round timer [{EndRoundTimer}]");
                         }
-                        else if (endRoundTimer < 0.0f)
+                        else if (EndRoundTimer < 0.0f)
                         {
-                            endRoundTimer = 0.0f;
+                            EndRoundTimer = 0.0f;
                             McmUtils.Trace("Clamping timer to 0");
                         }
                     }
@@ -348,7 +349,7 @@ namespace MultiplayerCrewManager
                     client.SpectateOnly = true;
                     McmUtils.Info($"New client - {client.CharacterID} | '{client.Name}'");
                     // if spawning is enabled then check if spawn is needed
-                    if (McmMod.Config.AllowSpawnNewClients && client.InGame && client.Character == null)
+                    if (McmMod.Config.AutoSpawn && client.InGame && client.Character == null)
                     {
                         var character = Character.CharacterList.FirstOrDefault(c => c.TeamID == CharacterTeamType.Team1 && c.Name == client.Name);
                         if (character != null && !Manager.IsCurrentlyControlled(character)) Manager.Set(client, character);

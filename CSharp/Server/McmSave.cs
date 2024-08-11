@@ -278,14 +278,14 @@ namespace MultiplayerCrewManager
                         CharacterData.Add(charData);
                         str += $"\n    {character.ID} | {character.Name} - OK";
                     }
-                    else if (false == GameMain.Server.ServerSettings.AllowRespawn)
+                    else if (McmMod.Config.RespawnMode != RespawnMode.MidRound)
                     {
                         str += $"\n    {character.ID} | {character.Name} - Dead";
                     }
                 }
             }
             // add dead
-            if (GameMain.Server.ServerSettings.AllowRespawn)
+            if (McmMod.Config.RespawnMode == RespawnMode.MidRound)
             {
                 foreach (var charInfo in Control.Awaiting)
                 {

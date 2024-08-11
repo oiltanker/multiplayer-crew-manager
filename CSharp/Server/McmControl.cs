@@ -77,7 +77,7 @@ namespace MultiplayerCrewManager
         public void ReduceCharacterSkills(CharacterInfo charInfo)
         {
             if (charInfo.Job == null) return;
-            var skillLoss = McmMod.Config.SkillLossPercentageOnDeath;
+            var skillLoss = McmMod.Config.RespawnPenalty;
             var convertedToScalar = 1f - (skillLoss / 100);
             foreach (var skill in charInfo.Job.GetSkills())
             {
@@ -219,7 +219,7 @@ namespace MultiplayerCrewManager
             if (!McmMod.IsCampaign) return null;
             if (RespawnManager != self) RespawnManager = self;
 
-            if (GameMain.Server.ServerSettings.AllowRespawn)
+            if (McmMod.Config.RespawnMode == RespawnMode.MidRound)
             {
                 counter--;
                 if (counter <= 0)

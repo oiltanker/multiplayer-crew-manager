@@ -31,18 +31,34 @@ namespace MultiplayerCrewManager
         private static readonly Regex rMaskReleaseId = new Regex(@"^mcm\s+release\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskDelete = new Regex(@"^mcm\s+delete\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static readonly Regex rMaskSpawn = new Regex(@"^mcm\s+spawn\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        private static readonly Regex rMaskClientAutospawn = new Regex(@"^mcm\s+client\s+autospawn\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskConfig = new Regex(@"^mcm\s+config\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskRespawnSet = new Regex(@"^mcm\s+respawn\s+set\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        #region Respawn
+        private static readonly Regex rMaskSpawn = new Regex(@"^mcm\s+spawn\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskAutospawn = new Regex(@"^mcm\s+autospawn\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskRespawnMode = new Regex(@"^mcm\s+respawnmode\s+\d\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawnPenalty = new Regex(@"^mcm\s+respawn\s+penalty\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskRespawninterval = new Regex(@"^mcm\s+respawn\s+interval\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskRespawnMaxTransportTime = new Regex(@"^mcm\s+respawn\s+maxtransporttime\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex rMaskSecureEnabled = new Regex(@"^mcm\s+secure\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        #endregion
+
+        #region Reserve
         private static readonly Regex rMaskReserve = new Regex(@"^mcm\s+reserve\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReservePut = new Regex(@"^mcm\s+reserve\s+put\s+\d+\s?(force)?\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex rMaskReserveGet = new Regex(@"^mcm\s+reserve\s+get\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        #endregion
+
+        #region Shuttle
+        private static readonly Regex rMaskShuttles = new Regex(@"^mcm\s+shuttles\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskUseShuttle = new Regex(@"^mcm\s+useshuttle\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private const string shuttleNameMatchGroup = "shuttlename";
+        // for the shuttle name, we tolerate any string that starts with anything except a space ([^ ]), and end with anything except a space ([^ ]). It can have space inside though! \s*
+        private static readonly Regex rMaskShuttleName = new Regex(@"^mcm\s+shuttle\s+(?<"+shuttleNameMatchGroup+@">[^ ]+\s*[^ ]+)+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex rMaskRespawnShuttleTransportTime = new Regex(@"^mcm\s+shuttletransporttime\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        #endregion
+        private static readonly Regex rMaskSecureEnabled = new Regex(@"^mcm\s+secure\s+(true|false)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         private static readonly Regex rMaskLoggingLevelSet = new Regex(@"^mcm\slogging\s\d$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex rMaskIntValue = new Regex(@"\s+\d+\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -93,13 +109,13 @@ namespace MultiplayerCrewManager
                     (messageType, response) = ChatSpawnId(message, sender);
                 }
                     break;
-                case var _ when rMaskClientAutospawn.IsMatch(message):
+                case var _ when rMaskAutospawn.IsMatch(message):
                 {
                     // mcm client autospawn
                     (messageType, response) = ChatAutospawn(message, sender);
                 }
                     break;
-                case var _ when rMaskRespawnSet.IsMatch(message):
+                case var _ when rMaskRespawnMode.IsMatch(message):
                 {
                     // mcm respawn set <true/false> 
                     (messageType, response) = ChatRespawnSet(message, sender);
@@ -117,10 +133,28 @@ namespace MultiplayerCrewManager
                     (messageType, response) = ChatRespawnPenalty(message, sender);
                 }
                     break;
-                case var _ when rMaskRespawnMaxTransportTime.IsMatch(message):
+                case var _ when rMaskUseShuttle.IsMatch(message):
                 {
-                    // mcm respawn maxtransporttime <number>
-                    (messageType, response) = ChatMaxTransportTime(message, sender);
+                    // mcm useshuttle
+                    (messageType, response) = ChatUseShuttle(message, sender);
+                }
+                    break;
+                case var _ when rMaskShuttleName.IsMatch(message):
+                {
+                    // mcm shuttle <shuttlename>
+                    (messageType, response) = ChatShuttleName(message, sender);
+                }
+                    break;
+                case var _ when rMaskRespawnShuttleTransportTime.IsMatch(message):
+                {
+                    // mcm shuttletransporttime <number>
+                    (messageType, response) = ChatShuttleTransportTime(message, sender);
+                }
+                    break;
+                case var _ when rMaskShuttles.IsMatch(message):
+                {
+                    // mcm shuttles
+                    (messageType, response) = ChatShuttlesList(message, sender);
                 }
                     break;
                 case var _ when rMaskConfig.IsMatch(message):
@@ -176,6 +210,62 @@ namespace MultiplayerCrewManager
             return true;
         }
 
+        private (ChatMessageType messageType, string response) ChatShuttleName(string message, Client sender)
+        {
+            string response;
+            if (!sender.HasPermission(ClientPermissions.ConsoleCommands))
+                return SetPrivilegeError();
+
+
+
+            Group match = rMaskShuttleName.Match(message).Groups[shuttleNameMatchGroup];
+            var shuttleName = match.Value;
+
+
+            SubmarineInfo shuttle = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => string.Equals(s.DisplayName.Value, shuttleName, StringComparison.InvariantCultureIgnoreCase));
+            if (shuttle == null)
+            {
+                response =
+                    $"Error: No shuttle named '{shuttleName}' in the list of available submarines. " +
+                    $"Have you delete a mod or local submarine file?\n" +
+                    $"Use 'mcm shuttles' to display list of available shuttles";
+                return (ChatMessageType.Server, response);
+            }
+
+            McmMod.Config.RespawnShuttle = shuttleName;
+
+            response = $"[MCM] now using shuttle '{McmMod.Config.RespawnShuttle}'";
+
+            return (ChatMessageType.Server, response);
+        }
+
+        private (ChatMessageType messageType, string response) ChatUseShuttle(string message, Client sender)
+        {
+            ChatMessageType messageType;
+            string response;
+            if (sender.HasPermission(ClientPermissions.ConsoleCommands))
+            {
+                messageType = ChatMessageType.Server;
+                Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
+                if (value) response = $"[MCM] {nameof(McmMod.Config.UseShuttle).ToLowerInvariant()} turned ON";
+                else response = $"[MCM] {nameof(McmMod.Config.UseShuttle).ToLowerInvariant()} turned OFF";
+                McmMod.Config.UseShuttle = value;
+            }
+            else (messageType, response) = SetPrivilegeError();
+
+            return (messageType, response);
+        }
+
+        private (ChatMessageType messageType, string response) ChatShuttlesList(string message, Client sender)
+        {
+            string response = @"
+--------------------------------------------
+--------Available Subs / Shuttles -------
+--------------------------------------------" + 
+                              $"\n{McmMod.Config.AvailableShuttles()}";
+            return (ChatMessageType.ServerMessageBox, response);
+        }
+
         private (ChatMessageType messageType, string response) ChatRespawnPenalty(string message, Client sender)
         {
             ChatMessageType messageType;
@@ -185,7 +275,7 @@ namespace MultiplayerCrewManager
                 messageType = ChatMessageType.Server;
                 Int32.TryParse(rMaskIntValue.Match(message).Value, out int penalty);
                 response = $"[MCM] Respawn penalty is set to {penalty}%";
-                McmMod.Config.SkillLossPercentageOnDeath = Math.Max((float)penalty, 0);
+                McmMod.Config.RespawnPenalty = Math.Max((float)penalty, 0);
                 McmMod.SaveConfig();
             }
             else (messageType, response) = SetPrivilegeError();
@@ -298,14 +388,14 @@ namespace MultiplayerCrewManager
             var messageType = ChatMessageType.ServerMessageBox;
             var response = @"
 --------------------------------------------
--------------MCM Configuration--------------
+-------------MCM Configuration-----------
 --------------------------------------------" +
                            $"\n\n{McmMod.Config.ToString()}";
             
             return (messageType, response);
         }
 
-        private (ChatMessageType messageType, string response) ChatMaxTransportTime(string message, Client sender)
+        private (ChatMessageType messageType, string response) ChatShuttleTransportTime(string message, Client sender)
         {
             ChatMessageType messageType;
             string response;
@@ -314,7 +404,7 @@ namespace MultiplayerCrewManager
                 messageType = ChatMessageType.Server;
                 Int32.TryParse(rMaskIntValue.Match(message).Value, out int time);
                 response = $"[MCM] Respawn shuttle catch-up time is set to {time} seconds";
-                McmMod.Config.MaxTransportTime = (float)time;
+                McmMod.Config.ShuttleTransportTime = (float)time;
 
             }
             else (messageType, response) = SetPrivilegeError();
@@ -346,11 +436,14 @@ namespace MultiplayerCrewManager
             if (sender.HasPermission(ClientPermissions.ConsoleCommands))
             {
                 messageType = ChatMessageType.Server;
-                Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
-                if (value) response = "[MCM] Respawning is turned ON";
-                else response = "[MCM] Respawning is turned OFF";
-                McmMod.Config.AllowRespawn = value;
+                string intAsString = rMaskIntValue.Match(message).Value;
+
+                if(!Enum.TryParse(intAsString, out RespawnMode respawnMode))
+                    return (messageType, $"Could not parse {intAsString} as a valid RespawnMode");
+
+                McmMod.Config.RespawnMode = respawnMode;
                 McmMod.SaveConfig();
+                response = $"[MCM] RespawnMode set to {respawnMode}. It will be effective at next round.";
             }
             else (messageType, response) = SetPrivilegeError();
 
@@ -367,7 +460,7 @@ namespace MultiplayerCrewManager
                 Boolean.TryParse(rMaskBoolValue.Match(message).Value, out bool value);
                 if (value) response = "[MCM] Automatic new client character spawn is turned ON";
                 else response = "[MCM] Automatic new client character spawn is turned OFF";
-                McmMod.Config.AllowSpawnNewClients = value;
+                McmMod.Config.AutoSpawn = value;
                 McmMod.SaveConfig();
             }
             else (messageType, response) = SetPrivilegeError();
@@ -386,7 +479,7 @@ namespace MultiplayerCrewManager
                     Int32.TryParse(rMaskIntValue.Match(message).Value, out int clientId);
 
                     messageType = ChatMessageType.Error;
-                    var client = Client.ClientList.FirstOrDefault(c => clientId == c.Character.ID);
+                    var client = Client.ClientList.FirstOrDefault(c => clientId == c.Character.ID || clientId == c.NameId);
                     if (client != null)
                     {
                         if (Mod.TryCeateClientCharacter(client))
@@ -546,7 +639,11 @@ namespace MultiplayerCrewManager
             string response = string.Empty;
             if (character != null)
                 response += Stringify(character);
-            
+            else if (client.NameId != 0)
+                response += $"Spectator / use 'mcm spawn {client.NameId}' "; 
+            else
+                response += $"Player in Lobby";
+
             response += $"| {client.SteamID} - {client.Name}";
 
             return response;
@@ -612,13 +709,18 @@ usage: mcm [function] [args]
 
 —mcm spawn <ID> - spawn client character
 —mcm delete <ID> - delete character (with inventory)
-—mcm client autospawn <true/false> - automatic spawning for new clients
+—mcm autospawn <true/false> - automatic spawning for new clients
 —mcm release <ID> - release controlled character back to AI
 
-—mcm respawn set <true/false> - turn respawning on/off
+—mcm respawnmode <0/1/2> - turn respawn mode to (0 - MidRound, 1 - BetweenRounds, 2 - Permadeath. Effective at next round.
 —mcm respawn penalty <number> - set respawning penalty percentage. Disabled if <=0
 —mcm respawn interval <number> - time to wait before respawning
-—mcm respawn maxtransporttime <number> - respawn shuttle time to catch up with the main sub
+
+—mcm useshuttle <true/false> - set whether to use a shuttle. Effective at next round.
+—mcm shuttle <shuttleName> - use the given shuttle for respawn. Effective at next round.
+—mcm shuttle maxtransporttime <number> - respawn shuttle time to catch up with the main sub. Effective at next round.
+—mcm shuttles - list of available shuttles
+
 
 -mcm reserve - show characters stocked in reserve
 -mcm reserve put <ID> - put character in reserve

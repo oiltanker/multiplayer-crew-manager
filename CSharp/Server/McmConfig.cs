@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Xml.Serialization;
 using Barotrauma;
 using Barotrauma.Networking;
@@ -19,13 +21,15 @@ namespace MultiplayerCrewManager
         public McmLoggingLevel LoggingLevel = McmLoggingLevel.Info;
 
         public int ServerUpdateFrequency = 15;
-        public bool AllowSpawnNewClients = false;
+        public bool AutoSpawn = true;
         public bool SecureEnabled = false;
         //public float RespawnDelay = 5;
 
         private readonly PropertyInfo maxTransportTime;
         private readonly PropertyInfo respawnInterval;
         private readonly PropertyInfo skillLossPercentageOnDeath;
+        private readonly PropertyInfo useRespawnShuttle;
+
 
         public McmConfig()
         {
@@ -41,9 +45,13 @@ namespace MultiplayerCrewManager
             if (skillLossPercentageOnDeath is null)
                 throw new ApplicationException($"{typeof(McmConfig)} constructor. Could not perform GetProperty on ServerSettings.RespawnInterval");
 
+            useRespawnShuttle = typeof(ServerSettings).GetProperty("UseRespawnShuttle");
+            if (useRespawnShuttle is null)
+                throw new ApplicationException($"{typeof(McmConfig)} constructor. Could not perform GetProperty on ServerSettings.UseRespawnShuttle");
+
         }
 
-        public float MaxTransportTime
+        public float ShuttleTransportTime
         {
             get => GameMain.Server.ServerSettings.MaxTransportTime;
             set => maxTransportTime.SetValue(GameMain.Server.ServerSettings, value);
@@ -55,29 +63,88 @@ namespace MultiplayerCrewManager
             set => respawnInterval.SetValue(GameMain.Server.ServerSettings, value);
         }
 
-        public bool AllowRespawn
+        public RespawnMode RespawnMode
         {
-            get => GameMain.Server.ServerSettings.AllowRespawn;
-            set => GameMain.Server.ServerSettings.AllowRespawn = value;
+            get => GameMain.Server.ServerSettings.RespawnMode;
+            set => GameMain.Server.ServerSettings.RespawnMode = value;
         }
 
-        public float SkillLossPercentageOnDeath
+        public float RespawnPenalty
         {
             get => GameMain.Server.ServerSettings.SkillLossPercentageOnDeath;
             set => skillLossPercentageOnDeath.SetValue(GameMain.Server.ServerSettings, value);
         }
 
+        public bool UseShuttle
+        {
+            get => GameMain.Server.ServerSettings.UseRespawnShuttle;
+            set => useRespawnShuttle.SetValue(GameMain.Server.ServerSettings, value);
+        }
+
+        public string AvailableShuttles()
+        {
+            return SubmarineInfo.SavedSubmarines.Where(s => s.IsPlayer && s.HasTag(SubmarineTag.Shuttle)).Aggregate(
+                    new StringBuilder(),
+                    (current, next) => current.Append(current.Length == 0 ? "" : " | ").Append(next.DisplayName.Value))
+                .ToString();
+        }
+
+        /// <summary>
+        /// The Display name of the shuttle.
+        /// Little trick = we manipulate the shuttle using the display name, but in the settings we convert it to the actual system shuttle name
+        /// </summary>
+        public string RespawnShuttle
+        {
+            get
+            {
+                if (GameMain.Server.ServerSettings.SelectedShuttle.IsNullOrEmpty())
+                    return "None Selected";
+
+                SubmarineInfo shuttle = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => 
+                    IsPlayerShuttle(s) 
+                    && s.Name == GameMain.Server.ServerSettings.SelectedShuttle);
+
+                if (shuttle == null)
+                    return
+                        $"Error, couldn't find the designated shuttle '{GameMain.Server.ServerSettings.SelectedShuttle}' in the list of available submarines. " +
+                        $"Have you deleted the mod or local submarine file?\n" +
+                        $"Check the MCM commands list to display the list of available shuttles.";
+
+                return shuttle.DisplayName.Value;
+            }
+            set
+            {
+                // We use the friendly DisplayName when choosing a shuttle
+                SubmarineInfo shuttle = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => 
+                    IsPlayerShuttle(s) 
+                    && string.Equals(s.DisplayName.Value, value, StringComparison.InvariantCultureIgnoreCase));
+
+                GameMain.Server.ServerSettings.SelectedShuttle = shuttle != null 
+                    ? shuttle.Name 
+                    : "";
+            }
+        }
+        private bool IsPlayerShuttle(SubmarineInfo submarineInfo)
+        {
+            return submarineInfo.IsPlayer && submarineInfo.HasTag(SubmarineTag.Shuttle);
+        }
+
         public override string ToString()
         {
             return
-                $"{nameof(AllowRespawn)}: {AllowRespawn}\n" +
-                $"{nameof(AllowSpawnNewClients)}: {AllowSpawnNewClients}\n" +
-                $"{nameof(LoggingLevel)}: {(int)LoggingLevel} - {LoggingLevel}\n" +
-                $"{nameof(MaxTransportTime)}: {MaxTransportTime}s\n" +
+                $"New Clients {nameof(AutoSpawn)}: {AutoSpawn}\n" +
+                $"{nameof(RespawnMode)}: {RespawnMode}\n" +
                 $"{nameof(RespawnInterval)}: {RespawnInterval}s\n" +
+                $"{nameof(RespawnPenalty)}: {RespawnPenalty}\n" +
+                "---------------------------\n" +
+                $"{nameof(UseShuttle)}: {UseShuttle}\n" +
+                $"{nameof(RespawnShuttle)}: {RespawnShuttle}\n" +
+                $"{nameof(ShuttleTransportTime)}: {ShuttleTransportTime}s\n" +
+                "---------------------------\n" +
                 $"{nameof(SecureEnabled)}: {SecureEnabled},\n" +
-                $"{nameof(ServerUpdateFrequency)}: {ServerUpdateFrequency}s\n" +
-                $"{nameof(SkillLossPercentageOnDeath)}: {SkillLossPercentageOnDeath}%";
+                $"{nameof(LoggingLevel)}: {(int)LoggingLevel} - {LoggingLevel}\n" +
+                $"{nameof(ServerUpdateFrequency)}: {ServerUpdateFrequency}s";
+
         }
     }
 
