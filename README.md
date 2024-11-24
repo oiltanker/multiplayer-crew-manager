@@ -36,7 +36,7 @@ Multiplayer crew manager is a modification that makes Multiplayer Campaign play 
 
 **[My Barotrauma workshop](https://steamcommunity.com/id/oiltanker-dk/myworkshopfiles/?appid=602960)**
 
-Want to message me more directly? Message me on my **[discord](https://discord.gg/HkPNqnkDdF)**
+Want to message me more directly? Message me on my **[discord](https://discord.gg/jPSGeK5bAb)**
 
 - - - -
 
@@ -106,4 +106,4 @@ Steam 创意工坊：https://steamcommunity.com/sharedfiles/filedetails/?id=2775
 
 **[我的潜渊症创意工坊](https://steamcommunity.com/id/oiltanker-dk/myworkshopfiles/?appid=602960)**
 
-想更直接的跟我交流吗？请在我的 **[Discord](=https://discord.gg/HkPNqnkDdF)** 留言
+想更直接的跟我交流吗？请在我的 **[Discord](https://discord.gg/jPSGeK5bAb)** 留言
