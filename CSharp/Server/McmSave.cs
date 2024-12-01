@@ -183,7 +183,7 @@ namespace MultiplayerCrewManager
                     client.CharacterInfo.TeamID = CharacterTeamType.Team1;
 
                     client.AssignedJob = client.JobPreferences[0];
-                    client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
+                    client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, McmUtils.IsPvP, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
                     crewManager.AddCharacterInfo(client.CharacterInfo);
 
                     clientCount++;
@@ -230,7 +230,7 @@ namespace MultiplayerCrewManager
                     }
                 }
 
-                Barotrauma.SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                Barotrauma.SaveUtil.SaveGame(GameMain.GameSession.DataPath);
                 RequireImportSaving = false;
             }
         }
@@ -264,11 +264,12 @@ namespace MultiplayerCrewManager
             CharacterData.Clear();
             PipeIndex = 0;
             // add dummy
-            foreach (var character in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && c.Info != null))
+            var characters = Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && c.Info != null);
+            foreach (Character character in characters)
             {
                 // Team1, meaning default crew
 
-                if (crewManager.GetCharacterInfos().Any(ci => character.Info == ci))
+                if (character.IsRemotePlayer || crewManager.GetCharacterInfos().Any(ci => character.Info == ci))
                 { // if not fired
                     if (false == character.IsDead)
                     {
@@ -287,7 +288,7 @@ namespace MultiplayerCrewManager
             // add dead
             if (McmMod.Config.RespawnMode == RespawnMode.MidRound)
             {
-                foreach (var charInfo in Control.Awaiting)
+                foreach (var charInfo in Control.AwaitingRespawnCharaters)
                 {
                     charInfo.ClearCurrentOrders();
                     charInfo.RemoveSavedStatValuesOnDeath();

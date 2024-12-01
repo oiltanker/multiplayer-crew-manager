@@ -4,6 +4,8 @@ namespace MultiplayerCrewManager
 {
     public static class McmUtils
     {
+        public static bool IsPvP { get; } = GameMain.GameSession.GameMode is PvPMode;
+
         public static void Trace(object msg)
         {
             try

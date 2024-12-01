@@ -19,12 +19,16 @@ namespace MultiplayerCrewManager
         /// Stores filepath to the file which keeps data about crew reserve. Unique for each campaign.
         /// Looks like '[campaign_name]_ReserveStock.xml'
         /// </summary>
-        private static readonly string reserveFilepath = $"{Barotrauma.IO.Path.GetFullPath(GameMain.GameSession.SavePath).Substring(0, GameMain.GameSession.SavePath.Length-5) + "_ReserveStock.xml"}";
+        private static readonly string reserveFilepath;
 
         /// <summary>
         /// Check and create data file if need at the first class call
         /// </summary>
         static McmReserve() {
+            string savePath = GameMain.GameSession.DataPath.SavePath;
+            string fullPath = Barotrauma.IO.Path.GetFullPath(savePath);
+            reserveFilepath = fullPath.Replace(".save", "_ReserveStock.xml", StringComparison.InvariantCultureIgnoreCase);
+            
             checkOrCreateFile(reserveFilepath: reserveFilepath);
         }
 

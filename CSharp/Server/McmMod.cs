@@ -75,7 +75,7 @@ namespace MultiplayerCrewManager
                 Save.IsNewCampaign = false;
                 McmSave.PipeIndex = 0;
                 Save.IsCampaignLoaded = false;
-                Control.Awaiting.Clear();
+                Control.AwaitingRespawnCharaters.Clear();
                 return null;
             }, this);
             // loop start
@@ -84,7 +84,7 @@ namespace MultiplayerCrewManager
                 if (!IsCampaign) return;
 
                 Save.IsNewCampaign = false;
-                Control.Awaiting.Clear();
+                Control.AwaitingRespawnCharaters.Clear();
 
                 GameMain.LuaCs.Timer.Wait((args) =>
                 {
@@ -266,7 +266,7 @@ namespace MultiplayerCrewManager
                 "mcm_MultiPlayerCampaign_LoadCampaign",
                 "Barotrauma.MultiPlayerCampaign",
                 "LoadCampaign",
-                new string[] { "System.String", "Barotrauma.Networking.Client" },
+                new string[] { "Barotrauma.CampaignDataPath", "Barotrauma.Networking.Client" },
                 (instance, ptable) =>
                 {
                     Save.OnLoadCampaign();
@@ -278,14 +278,8 @@ namespace MultiplayerCrewManager
             GameMain.LuaCs.Hook.Patch(
                 "mcm_GameServer_StartGame",
                 "Barotrauma.Networking.GameServer",
-                "StartGame",
-                new string[]
-                {
-                    "Barotrauma.SubmarineInfo",
-                    "Barotrauma.SubmarineInfo",
-                    "Barotrauma.GameModePreset",
-                    "Barotrauma.CampaignSettings"
-                },
+                "TryStartGame",
+                null,
                 (instance, ptable) =>
                 {
                     Save.OnStartGame();
@@ -352,8 +346,10 @@ namespace MultiplayerCrewManager
                     if (McmMod.Config.AutoSpawn && client.InGame && client.Character == null)
                     {
                         var character = Character.CharacterList.FirstOrDefault(c => c.TeamID == CharacterTeamType.Team1 && c.Name == client.Name);
-                        if (character != null && !Manager.IsCurrentlyControlled(character)) Manager.Set(client, character);
-                        else toBeCreated.Add(client);
+                        if (character != null && !Manager.IsCurrentlyControlled(character)) 
+                            Manager.Set(client, character);
+                        else
+                            toBeCreated.Add(client);
                     }
                 }
             }
@@ -408,7 +404,7 @@ namespace MultiplayerCrewManager
 
                 crewManager.AddCharacterInfo(client.CharacterInfo);
                 client.AssignedJob = client.JobPreferences[0];
-                client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
+                client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, McmUtils.IsPvP, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
 
                 //Setting a waypoint
                 Barotrauma.WayPoint waypoint = null;
@@ -466,7 +462,7 @@ namespace MultiplayerCrewManager
                 crewManager.AddCharacter(character);
 
                 Manager.Set(client, character);
-                character.GiveJobItems(waypoint);
+                character.GiveJobItems(McmUtils.IsPvP, waypoint);
             }
             return success;
         }

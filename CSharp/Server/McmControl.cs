@@ -53,13 +53,13 @@ namespace MultiplayerCrewManager
 
         public McmClientManager ClientManager { get; private set; }
         public RespawnManager RespawnManager { get; private set; }
-        public HashSet<CharacterInfo> Awaiting { get; private set; }
+        public HashSet<CharacterInfo> AwaitingRespawnCharaters { get; private set; }
 
         public McmControl(RespawnManager respawnManager, McmClientManager clientManager)
         {
             RespawnManager = respawnManager;
             ClientManager = clientManager;
-            Awaiting = new HashSet<CharacterInfo>();
+            AwaitingRespawnCharaters = new HashSet<CharacterInfo>();
         }
 
         public void ResetShuttle()
@@ -67,11 +67,14 @@ namespace MultiplayerCrewManager
             if (RespawnManager != null) resetShuttleMethod?.Invoke(RespawnManager, null);
         }
 
-        public WayPoint[] GetRespawnPoints(IEnumerable<CharacterInfo> crew)
+        public WayPoint[] GetRespawnPoints(List<CharacterInfo> crew)
         {
-            var respawnSub = RespawnManager.RespawnShuttle;
+            if (crew == null || !crew.Any())
+                return Array.Empty<WayPoint>();
+
+            Submarine respawnSub = RespawnManager.GetShuttle(crew.First().TeamID);
             if (respawnSub == null || Level.IsLoadedOutpost) respawnSub = Submarine.MainSub;
-            return WayPoint.SelectCrewSpawnPoints(crew.ToList(), respawnSub);
+            return WayPoint.SelectCrewSpawnPoints(crew, respawnSub);
         }
 
         public void ReduceCharacterSkills(CharacterInfo charInfo)
@@ -81,10 +84,10 @@ namespace MultiplayerCrewManager
             var convertedToScalar = 1f - (skillLoss / 100);
             foreach (var skill in charInfo.Job.GetSkills())
             {
-                var prefab = charInfo.Job.Prefab.Skills.FirstOrDefault(s => skill.Identifier == s.Identifier);
+                SkillPrefab prefab = charInfo.Job.Prefab.Skills.FirstOrDefault(s => skill.Identifier == s.Identifier);
                 if (prefab != null)
                 {
-                    skill.Level = Math.Max(prefab.LevelRange.Start, skill.Level * convertedToScalar);
+                    skill.Level = Math.Max(prefab.GetLevelRange(McmUtils.IsPvP).Start, skill.Level * convertedToScalar);
                     McmUtils.Trace($"Reducing skill \"{skill.Identifier}\" by {skillLoss}%. New value {skill.Level}");
                 }
             }
@@ -119,23 +122,23 @@ namespace MultiplayerCrewManager
                     McmUtils.Info($"Inflicting respawn penalty affliction on character \"{charInfo.Name}\"");
                 }
             }
-            character.GiveJobItems(spawnPoint);
+            character.GiveJobItems(McmUtils.IsPvP,spawnPoint);
             character.GiveIdCardTags(spawnPoint);
         }
 
         public IEnumerable<Character> GetRespawnSubChars()
         {
-            return Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead && c.Submarine == RespawnManager.RespawnShuttle);
+            return Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead && c.Submarine == RespawnManager.GetShuttle(CharacterTeamType.Team1));
         }
 
         public bool TryRespawn(bool forceRespawn = false)
         {
-            if (RespawnManager.RespawnShuttle != null)
+            if (RespawnManager.UsingShuttle)
             {
                 // get all chars on respawn sub
                 var charsOnSub = GetRespawnSubChars();
                 // is respawn now possible
-                if (charsOnSub.Count() > 0)
+                if (charsOnSub != null)
                 {
                     if (forceRespawn)
                     {
@@ -143,7 +146,7 @@ namespace MultiplayerCrewManager
                         foreach (var character in charsOnSub)
                         {
                             Entity.Spawner.AddEntityToRemoveQueue(character);
-                            if (!Awaiting.Contains(character.Info)) Awaiting.Add(character.Info);
+                            AwaitingRespawnCharaters.Add(character.Info);
                         }
                         Entity.Spawner.Update();
                     }
@@ -152,26 +155,34 @@ namespace MultiplayerCrewManager
             }
 
             // dispatch respawn shuttle if needed
-            if (RespawnManager.RespawnShuttle != null && !Level.IsLoadedOutpost)
+            if (RespawnManager.UsingShuttle && !Level.IsLoadedOutpost)
             {
-                var shuttle = RespawnManager.RespawnShuttle;
-                var shuttleSteering = Item.ItemList.FirstOrDefault(i => i.Submarine == shuttle)?.GetComponent<Steering>();
+                Submarine shuttle = RespawnManager.GetShuttle(CharacterTeamType.Team1);
+                Submarine sub = RespawnManager.Submarine;
+                Steering shuttleSteering = Item.ItemList.FirstOrDefault(i => i.Submarine == shuttle)?.GetComponent<Steering>();
 
                 ResetShuttle();
                 if (shuttleSteering != null) shuttleSteering.TargetVelocity = Vector2.Zero;
 
-                shuttle.SetPosition(RespawnManager.FindSpawnPos());
+                shuttle.SetPosition(RespawnManager.FindSpawnPos(shuttle, sub));
                 shuttle.Velocity = Vector2.Zero;
                 shuttle.NeutralizeBallast();
                 shuttle.EnableMaintainPosition();
             }
             // get spawn points
-            var respawnPoints = GetRespawnPoints(Awaiting);
+            WayPoint[] respawnPoints = GetRespawnPoints(AwaitingRespawnCharaters.ToList());
             // respawn chars
-            Awaiting.Zip(respawnPoints, (ci, rp) => (ci, rp)).ToList().ForEach(t => RespawnCharacter(t.Item1, t.Item2));
-            Awaiting.Clear();
+            List<(CharacterInfo ci, WayPoint wp)> charactersWaypoints = AwaitingRespawnCharaters.Zip(respawnPoints, ResultSelector).ToList();
+
+            charactersWaypoints.ForEach(item => RespawnCharacter(item.ci, item.wp));
+            AwaitingRespawnCharaters.Clear();
             // all good
             return true;
+        }
+
+        private (CharacterInfo ci, WayPoint rp) ResultSelector(CharacterInfo ci, WayPoint rp)
+        {
+            return (ci, rp);
         }
 
         public void UpdateAwaiting()
@@ -181,8 +192,8 @@ namespace MultiplayerCrewManager
             foreach (var charInfo in crewManager.GetCharacterInfos()
                 .Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsNewHire))
             {
-                if (!Awaiting.Contains(charInfo) && !Character.CharacterList.Any(c => charInfo == c.Info && !c.IsDead))
-                    Awaiting.Add(charInfo);
+                if (!AwaitingRespawnCharaters.Contains(charInfo) && !Character.CharacterList.Any(c => charInfo == c.Info && !c.IsDead))
+                    AwaitingRespawnCharaters.Add(charInfo);
             }
         }
 
@@ -196,7 +207,7 @@ namespace MultiplayerCrewManager
                     // reset respawn state
                     respawnTimeBegin = 0;
                     respawnTimer = 0;
-                    Awaiting.Clear();
+                    AwaitingRespawnCharaters.Clear();
                 }
                 else
                 {
@@ -207,7 +218,7 @@ namespace MultiplayerCrewManager
             // update dead characters awaiting respawn
             UpdateAwaiting();
             // start timer if needed
-            if (Awaiting.Count > 0 && respawnTimeBegin == 0)
+            if (AwaitingRespawnCharaters.Count > 0 && respawnTimeBegin == 0)
             {
                 respawnTimeBegin = LuaCsTimer.Time;
                 respawnTimer = McmMod.Config.RespawnInterval;
