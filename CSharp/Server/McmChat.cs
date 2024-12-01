@@ -613,7 +613,7 @@ namespace MultiplayerCrewManager
             HashSet<Character> displayedCharacters = new HashSet<Character>();
 
             // Humans
-            var response = "-= Clients and NPCs =-\n";
+            var response = "CharacterID / Type | Character name (displayed) | Steam Id - Client Name\n";
             foreach (var client in Client.ClientList)
             {
                 response += $"{Stringify(client)}\n";

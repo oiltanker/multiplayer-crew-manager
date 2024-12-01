@@ -278,8 +278,15 @@ namespace MultiplayerCrewManager
             GameMain.LuaCs.Hook.Patch(
                 "mcm_GameServer_StartGame",
                 "Barotrauma.Networking.GameServer",
-                "TryStartGame",
-                null,
+                "StartGame",
+                new string[]
+                {
+                    "Barotrauma.SubmarineInfo",
+                    "Barotrauma.SubmarineInfo",
+                    "Barotrauma.Option`1[Barotrauma.SubmarineInfo]",
+                    "Barotrauma.GameModePreset",
+                    "Barotrauma.CampaignSettings"
+                },
                 (instance, ptable) =>
                 {
                     Save.OnStartGame();
