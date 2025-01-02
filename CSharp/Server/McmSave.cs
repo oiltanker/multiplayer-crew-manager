@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using System.Linq;
 using System.Collections.Generic;
@@ -183,7 +183,7 @@ namespace MultiplayerCrewManager
                     client.CharacterInfo.TeamID = CharacterTeamType.Team1;
 
                     client.AssignedJob = client.JobPreferences[0];
-                    client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
+                    client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, false, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
                     crewManager.AddCharacterInfo(client.CharacterInfo);
 
                     clientCount++;
@@ -230,7 +230,7 @@ namespace MultiplayerCrewManager
                     }
                 }
 
-                Barotrauma.SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                Barotrauma.SaveUtil.SaveGame(GameMain.GameSession.DataPath);
                 RequireImportSaving = false;
             }
         }

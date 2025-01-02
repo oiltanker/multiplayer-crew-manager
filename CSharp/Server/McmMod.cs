@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Xml.Linq;
 using System;
 using System.Reflection;
@@ -408,7 +408,7 @@ namespace MultiplayerCrewManager
 
                 crewManager.AddCharacterInfo(client.CharacterInfo);
                 client.AssignedJob = client.JobPreferences[0];
-                client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
+                client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, false, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
 
                 //Setting a waypoint
                 Barotrauma.WayPoint waypoint = null;
@@ -466,7 +466,7 @@ namespace MultiplayerCrewManager
                 crewManager.AddCharacter(character);
 
                 Manager.Set(client, character);
-                character.GiveJobItems(waypoint);
+                character.GiveJobItems(false, waypoint);
             }
             return success;
         }
