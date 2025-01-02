@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +19,7 @@ namespace MultiplayerCrewManager
         /// Stores filepath to the file which keeps data about crew reserve. Unique for each campaign.
         /// Looks like '[campaign_name]_ReserveStock.xml'
         /// </summary>
-        private static readonly string reserveFilepath = $"{Barotrauma.IO.Path.GetFullPath(GameMain.GameSession.SavePath).Substring(0, GameMain.GameSession.SavePath.Length-5) + "_ReserveStock.xml"}";
+        private static readonly string reserveFilepath = $"{Barotrauma.IO.Path.GetFullPath(GameMain.GameSession.DataPath.SavePath).Substring(0, GameMain.GameSession.DataPath.SavePath.Length-5) + "_ReserveStock.xml"}";
 
         /// <summary>
         /// Check and create data file if need at the first class call
