@@ -279,13 +279,11 @@ namespace MultiplayerCrewManager
                 "mcm_GameServer_StartGame",
                 "Barotrauma.Networking.GameServer",
                 "StartGame",
-                new string[]
-                {
-                    "Barotrauma.SubmarineInfo",
-                    "Barotrauma.SubmarineInfo",
-                    "Barotrauma.GameModePreset",
-                    "Barotrauma.CampaignSettings"
-                },
+                new string[] {  "Barotrauma.SubmarineInfo",
+                                "Barotrauma.SubmarineInfo",
+                                "Barotrauma.Option`1[[Barotrauma.SubmarineInfo, DedicatedServer, Version=1.7.7.0, Culture=neutral, PublicKeyToken=null]]",
+                                "Barotrauma.GameModePreset",
+                                "Barotrauma.CampaignSettings" },
                 (instance, ptable) =>
                 {
                     Save.OnStartGame();
