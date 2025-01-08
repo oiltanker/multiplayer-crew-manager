@@ -274,53 +274,6 @@ namespace MultiplayerCrewManager
                 },
                 LuaCsHook.HookMethodType.After);
 
-            // init datas and clients, depending on campaign status
-            GameMain.LuaCs.Hook.Patch(
-                "mcm_GameServer_StartGame",
-                "Barotrauma.Networking.GameServer",
-                "StartGame",
-                new string[] {  "Barotrauma.SubmarineInfo",
-                                "Barotrauma.SubmarineInfo",
-                                "Barotrauma.Option`1[[Barotrauma.SubmarineInfo, DedicatedServer, Version=1.7.7.0, Culture=neutral, PublicKeyToken=null]]",
-                                "Barotrauma.GameModePreset",
-                                "Barotrauma.CampaignSettings" },
-                (instance, ptable) =>
-                {
-                    Save.OnStartGame();
-                    return null;
-                },
-                LuaCsHook.HookMethodType.After);
-
-            GameMain.LuaCs.Hook.Patch(
-               "mcm_CrewManager_InitRound",
-               "Barotrauma.CrewManager",
-               "InitRound",
-               new string[] { },
-               (instance, ptable) =>
-               {
-                   Control.OnInitRound(instance as CrewManager);
-                   Save.RestoreCharactersWallets();
-                   McmSave.ImportSaveProtection();
-                   return null;
-               },
-               LuaCsHook.HookMethodType.After);
-
-            //Pre-cursor to help with creating a new character
-            //GameMain.LuaCs.Hook.Patch(
-            //    "mcm_GameMain_OnCreateNewCharacter",
-            //    "Barotrauma.Networking.GameServer",
-            //    "UpdateCharacterInfo",
-            //    new string[] { "Barotrauma.Networking.IReadMessage", "Barotrauma.Networking.Client" },
-            //    (instance, ptable) =>
-            //    {
-            //        //TODO Capture event and somehow integrate it into the mod so that we are able to create new characters
-            //        IReadMessage message = (Barotrauma.Networking.IReadMessage)ptable["message"];
-            //        Barotrauma.Networking.ClientPacketHeader header = (Barotrauma.Networking.ClientPacketHeader)message.Buffer[0];
-            //        if (header == Barotrauma.Networking.ClientPacketHeader.UPDATE_CHARACTERINFO)
-            //            LuaCsSetup.PrintCsMessage($"[MCM-DEBUG] Client created new character");
-            //        return null;
-            //    },
-            //    LuaCsHook.HookMethodType.After);
         }
 
         private int counter = -1;
