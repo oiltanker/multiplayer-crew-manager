@@ -268,7 +268,7 @@ namespace MultiplayerCrewManager
             {
                 // Team1, meaning default crew
 
-                if (crewManager.GetCharacterInfos().Any(ci => character.Info == ci))
+                if (crewManager.GetCharacterInfos().Any(ci => character.Info == ci) || character.IsRemotePlayer)
                 { // if not fired
                     if (false == character.IsDead)
                     {

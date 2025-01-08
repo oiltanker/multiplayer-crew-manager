@@ -69,7 +69,7 @@ namespace MultiplayerCrewManager
 
         public WayPoint[] GetRespawnPoints(IEnumerable<CharacterInfo> crew)
         {
-            var respawnSub = RespawnManager.RespawnShuttles.First();
+            var respawnSub = RespawnManager.RespawnShuttles.FirstOrDefault();
             if (respawnSub == null || Level.IsLoadedOutpost) respawnSub = Submarine.MainSub;
             return WayPoint.SelectCrewSpawnPoints(crew.ToList(), respawnSub);
         }
@@ -125,7 +125,7 @@ namespace MultiplayerCrewManager
 
         public IEnumerable<Character> GetRespawnSubChars()
         {
-            return Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead && c.Submarine == RespawnManager.RespawnShuttles.First());
+            return Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.Team1 && !c.IsDead && c.Submarine == RespawnManager.RespawnShuttles.FirstOrDefault());
         }
 
         public bool TryRespawn(bool forceRespawn = false)
@@ -154,7 +154,7 @@ namespace MultiplayerCrewManager
             // dispatch respawn shuttle if needed
             if (RespawnManager.RespawnShuttles.Any() && !Level.IsLoadedOutpost)
             {
-                var shuttle = RespawnManager.RespawnShuttles.First();
+                var shuttle = RespawnManager.RespawnShuttles.FirstOrDefault();
                 var shuttleSteering = Item.ItemList.FirstOrDefault(i => i.Submarine == shuttle)?.GetComponent<Steering>();
 
                 ResetShuttle();

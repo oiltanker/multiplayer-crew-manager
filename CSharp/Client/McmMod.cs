@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 using Barotrauma;
 using Barotrauma.Networking;
 
@@ -30,11 +31,23 @@ namespace MultiplayerCrewManager {
             LuaCsSetup.PrintCsMessage("[MCM-CLIENT] Initialization complete");
         }
         public void OnCrewListUpdate(GUIListBox crewList, object draggedElementData) {
+                        var crewManager = GameMain.GameSession.CrewManager;
+            List<Character> pendingRemove = new List<Character>();
             if  (!crewList.HasDraggedElementIndexChanged) {
                 var character = draggedElementData as Character;
                 var msg = GameMain.LuaCs.Networking.Start("server-mcm");
                 msg.WriteString(character.ID.ToString());
                 GameMain.LuaCs.Networking.Send(msg);
+            }
+                        foreach (var character in Character.CharacterList)
+            {
+                if (Character.CharacterList.Where(c => c.Name == character.Name).Count() >= 2 && !pendingRemove.Any(c => c.Name == character.Name)){
+                        pendingRemove.Add(character);
+                        }
+            }
+            foreach (var character in pendingRemove){
+                character.Remove();
+                crewManager.KillCharacter(character);
             }
         }
     }
