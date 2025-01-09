@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Xml.Linq;
 using System;
 using System.Reflection;
@@ -17,7 +17,7 @@ namespace MultiplayerCrewManager
         private float EndRoundTimer
         {
             get => GameMain.Server.EndRoundTimer;
-            
+
             set => endRoundTimerProperty.SetValue(GameMain.Server, value);
         }
 
@@ -176,7 +176,7 @@ namespace MultiplayerCrewManager
                         return null;
                     }
 
-                    if (McmMod.Config.RespawnMode!= RespawnMode.MidRound)
+                    if (McmMod.Config.RespawnMode != RespawnMode.MidRound)
                     {
                         return null;
                     }
@@ -266,29 +266,10 @@ namespace MultiplayerCrewManager
                 "mcm_MultiPlayerCampaign_LoadCampaign",
                 "Barotrauma.MultiPlayerCampaign",
                 "LoadCampaign",
-                new string[] { "System.String", "Barotrauma.Networking.Client" },
+                new string[] { "Barotrauma.CampaignDataPath", "Barotrauma.Networking.Client" },
                 (instance, ptable) =>
                 {
                     Save.OnLoadCampaign();
-                    return null;
-                },
-                LuaCsHook.HookMethodType.After);
-
-            // init datas and clients, depending on campaign status
-            GameMain.LuaCs.Hook.Patch(
-                "mcm_GameServer_StartGame",
-                "Barotrauma.Networking.GameServer",
-                "StartGame",
-                new string[]
-                {
-                    "Barotrauma.SubmarineInfo",
-                    "Barotrauma.SubmarineInfo",
-                    "Barotrauma.GameModePreset",
-                    "Barotrauma.CampaignSettings"
-                },
-                (instance, ptable) =>
-                {
-                    Save.OnStartGame();
                     return null;
                 },
                 LuaCsHook.HookMethodType.After);
@@ -307,22 +288,6 @@ namespace MultiplayerCrewManager
                },
                LuaCsHook.HookMethodType.After);
 
-            //Pre-cursor to help with creating a new character
-            //GameMain.LuaCs.Hook.Patch(
-            //    "mcm_GameMain_OnCreateNewCharacter",
-            //    "Barotrauma.Networking.GameServer",
-            //    "UpdateCharacterInfo",
-            //    new string[] { "Barotrauma.Networking.IReadMessage", "Barotrauma.Networking.Client" },
-            //    (instance, ptable) =>
-            //    {
-            //        //TODO Capture event and somehow integrate it into the mod so that we are able to create new characters
-            //        IReadMessage message = (Barotrauma.Networking.IReadMessage)ptable["message"];
-            //        Barotrauma.Networking.ClientPacketHeader header = (Barotrauma.Networking.ClientPacketHeader)message.Buffer[0];
-            //        if (header == Barotrauma.Networking.ClientPacketHeader.UPDATE_CHARACTERINFO)
-            //            LuaCsSetup.PrintCsMessage($"[MCM-DEBUG] Client created new character");
-            //        return null;
-            //    },
-            //    LuaCsHook.HookMethodType.After);
         }
 
         private int counter = -1;
@@ -338,22 +303,41 @@ namespace MultiplayerCrewManager
 
         public void ClientListUpdate()
         {
+            var crewManager = GameMain.GameSession.CrewManager;
             var toBeCreated = new List<Client>();
             // update client control status
-            foreach (var client in Client.ClientList)
+            foreach (var client in GameMain.Server.ConnectedClients)
             {
-                Manager.Set(client, client.Character);
+
                 if (client.InGame && !client.SpectateOnly)
                 {
+                    Manager.Set(client, null);
                     // mark client in game registered
                     client.SpectateOnly = true;
                     McmUtils.Info($"New client - {client.CharacterID} | '{client.Name}'");
                     // if spawning is enabled then check if spawn is needed
-                    if (McmMod.Config.AutoSpawn && client.InGame && client.Character == null)
+                    // Avoid duplicate players at the start of a tour
+                    if (client.InGame && client.Character == null)
                     {
-                        var character = Character.CharacterList.FirstOrDefault(c => c.TeamID == CharacterTeamType.Team1 && c.Name == client.Name);
-                        if (character != null && !Manager.IsCurrentlyControlled(character)) Manager.Set(client, character);
-                        else toBeCreated.Add(client);
+
+                        while (Character.CharacterList.Where(c => c.Name == client.Name).Count() >= 2)
+                        {
+                            Manager.Set(client, null);
+                            var chr = Character.CharacterList.FirstOrDefault(c => c.Name == client.Name);
+                            chr.Remove();
+                            crewManager.RemoveCharacter(chr, true, true);
+
+                            McmUtils.Info($"Delete Duplicate Player");
+                        }
+                        var character = Character.CharacterList.FirstOrDefault(c => c.Name == client.Name);
+                        if (character != null) { Manager.Set(client, character); client.Character = character; }
+                        else
+                        {
+                            McmUtils.Info($"Creating client character - {client.Name} | '{client.Name}'");
+                            bool rst = Character.CharacterList.Any(c => c.Name == client.Name);
+                            McmUtils.Info($"Found - {rst}");
+                            toBeCreated.Add(client);
+                        };
                     }
                 }
             }
@@ -362,7 +346,6 @@ namespace MultiplayerCrewManager
             //toBeCreated.ForEach(c => TryCeateClientCharacter(c));
             OnlineStatResolver();
         }
-
 
         /// <summary>
         /// Due the asyncrinized network client-server interactions, player's character could be sometimes falling to endless ragdoll on the round start until the player reset himself to the character. This handler is designed to solve this problem
@@ -408,7 +391,7 @@ namespace MultiplayerCrewManager
 
                 crewManager.AddCharacterInfo(client.CharacterInfo);
                 client.AssignedJob = client.JobPreferences[0];
-                client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
+                client.CharacterInfo.Job = new Job(client.AssignedJob.Prefab, false, Rand.RandSync.Unsynced, client.AssignedJob.Variant);
 
                 //Setting a waypoint
                 Barotrauma.WayPoint waypoint = null;
@@ -466,7 +449,7 @@ namespace MultiplayerCrewManager
                 crewManager.AddCharacter(character);
 
                 Manager.Set(client, character);
-                character.GiveJobItems(waypoint);
+                character.GiveJobItems(false, waypoint);
             }
             return success;
         }
