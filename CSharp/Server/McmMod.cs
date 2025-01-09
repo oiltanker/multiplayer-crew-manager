@@ -17,7 +17,7 @@ namespace MultiplayerCrewManager
         private float EndRoundTimer
         {
             get => GameMain.Server.EndRoundTimer;
-            
+
             set => endRoundTimerProperty.SetValue(GameMain.Server, value);
         }
 
@@ -176,7 +176,7 @@ namespace MultiplayerCrewManager
                         return null;
                     }
 
-                    if (McmMod.Config.RespawnMode!= RespawnMode.MidRound)
+                    if (McmMod.Config.RespawnMode != RespawnMode.MidRound)
                     {
                         return null;
                     }
@@ -274,6 +274,20 @@ namespace MultiplayerCrewManager
                 },
                 LuaCsHook.HookMethodType.After);
 
+            GameMain.LuaCs.Hook.Patch(
+               "mcm_CrewManager_InitRound",
+               "Barotrauma.CrewManager",
+               "InitRound",
+               new string[] { },
+               (instance, ptable) =>
+               {
+                   Control.OnInitRound(instance as CrewManager);
+                   Save.RestoreCharactersWallets();
+                   McmSave.ImportSaveProtection();
+                   return null;
+               },
+               LuaCsHook.HookMethodType.After);
+
         }
 
         private int counter = -1;
@@ -294,7 +308,7 @@ namespace MultiplayerCrewManager
             // update client control status
             foreach (var client in GameMain.Server.ConnectedClients)
             {
-                
+
                 if (client.InGame && !client.SpectateOnly)
                 {
                     Manager.Set(client, null);
@@ -305,18 +319,20 @@ namespace MultiplayerCrewManager
                     // Avoid duplicate players at the start of a tour
                     if (client.InGame && client.Character == null)
                     {
-                        
-                        while (Character.CharacterList.Where(c => c.Name == client.Name).Count() >= 2){
-                        Manager.Set(client, null);
-                        var chr = Character.CharacterList.FirstOrDefault(c => c.Name == client.Name);
-                        chr.Remove();
-                        crewManager.RemoveCharacter(chr,true,true);
 
-                        McmUtils.Info($"Delete Duplicate Player");
+                        while (Character.CharacterList.Where(c => c.Name == client.Name).Count() >= 2)
+                        {
+                            Manager.Set(client, null);
+                            var chr = Character.CharacterList.FirstOrDefault(c => c.Name == client.Name);
+                            chr.Remove();
+                            crewManager.RemoveCharacter(chr, true, true);
+
+                            McmUtils.Info($"Delete Duplicate Player");
                         }
                         var character = Character.CharacterList.FirstOrDefault(c => c.Name == client.Name);
-                        if (character != null) {Manager.Set(client, character);client.Character = character;}
-                        else {
+                        if (character != null) { Manager.Set(client, character); client.Character = character; }
+                        else
+                        {
                             McmUtils.Info($"Creating client character - {client.Name} | '{client.Name}'");
                             bool rst = Character.CharacterList.Any(c => c.Name == client.Name);
                             McmUtils.Info($"Found - {rst}");
