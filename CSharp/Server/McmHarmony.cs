@@ -41,10 +41,7 @@ namespace Mcm_mod
                 ref IEnumerable<CoroutineStatus> __result
             )
             {
-                McmClientManager Manager = new McmClientManager();
-                McmControl Control = new McmControl(GameMain.Server?.RespawnManager, Manager);
-                McmSave instance = new McmSave(Control);
-                instance.OnStartGame();
+                McmMod.Instance.Save.OnStartGame();
             }
 
         }

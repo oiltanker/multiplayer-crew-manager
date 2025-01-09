@@ -13,6 +13,8 @@ namespace MultiplayerCrewManager
 {
     partial class McmMod
     {
+        private static McmMod _instance;
+        public static McmMod Instance => _instance ?? (_instance = new McmMod());
         private PropertyInfo endRoundTimerProperty = typeof(GameServer).GetProperty("EndRoundTimer");
         private float EndRoundTimer
         {
