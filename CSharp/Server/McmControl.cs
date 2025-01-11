@@ -54,12 +54,14 @@ namespace MultiplayerCrewManager
         public McmClientManager ClientManager { get; private set; }
         public RespawnManager RespawnManager { get; private set; }
         public HashSet<CharacterInfo> Awaiting { get; private set; }
+        public HashSet<CharacterInfo> BetweenRoundsAwaiting { get; private set; }
 
         public McmControl(RespawnManager respawnManager, McmClientManager clientManager)
         {
             RespawnManager = respawnManager;
             ClientManager = clientManager;
             Awaiting = new HashSet<CharacterInfo>();
+            BetweenRoundsAwaiting = new HashSet<CharacterInfo>();
         }
 
         public void ResetShuttle()

@@ -285,8 +285,13 @@ namespace MultiplayerCrewManager
                 }
             }
             // add dead
-            if (McmMod.Config.RespawnMode == RespawnMode.MidRound)
+            if (McmMod.Config.RespawnMode is RespawnMode.MidRound or RespawnMode.BetweenRounds)
             {
+                // Added dead character data to the waiting list in BetweenRounds respawn mode
+                foreach (var a in Control.BetweenRoundsAwaiting)
+                {
+                    Control.Awaiting.Add(a);
+                }
                 foreach (var charInfo in Control.Awaiting)
                 {
                     charInfo.ClearCurrentOrders();
