@@ -325,6 +325,7 @@ namespace MultiplayerCrewManager
                 CharacterData.Add(charData);
                 str += $"\n    {charInfo.ID} | {charInfo.Name} - New Hire";
             }
+            McmMod.Instance.Control.BetweenRoundsAwaiting.Clear();
             // log status
             McmUtils.Info(str);
         }

@@ -66,7 +66,8 @@ namespace MultiplayerCrewManager
 
         public void ResetShuttle()
         {
-            if (RespawnManager != null) resetShuttleMethod?.Invoke(RespawnManager, null);
+            var teamSpecificState = new Barotrauma.Networking.RespawnManager.TeamSpecificState(Barotrauma.CharacterTeamType.Team1);
+            if (RespawnManager != null) resetShuttleMethod?.Invoke(RespawnManager, new object[] { teamSpecificState });
         }
 
         public WayPoint[] GetRespawnPoints(IEnumerable<CharacterInfo> crew)
@@ -191,7 +192,7 @@ namespace MultiplayerCrewManager
         public void UpdateRespawns()
         {
             // do respawn
-            if (respawnTimeBegin != 0 && LuaCsTimer.Time - respawnTimer >= respawnTimeBegin)
+            if (McmMod.Config.RespawnMode == RespawnMode.MidRound && respawnTimeBegin != 0 && LuaCsTimer.Time - respawnTimer >= respawnTimeBegin)
             {
                 if (TryRespawn(LuaCsTimer.Time - respawnTimer > respawnTimeBegin))
                 {
