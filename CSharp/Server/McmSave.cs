@@ -157,7 +157,8 @@ namespace MultiplayerCrewManager
                         //{
                         //}
                         McmUtils.Warn($"Unit [{p.CharacterInfo.Name}] was missing inventory-data - Defaulting to CharacterInfo.InventoryData");
-                        inventoryData = charInfo.InventoryData;
+                        // If false in Barotrauma.CrewManager.InitializeCharacter the character will get the initial items
+                        charInfo.StartItemsGiven = false;
                     }
                     if (hpData == null) //If unable to read from file; attempt to fall back on current health data
                     {
@@ -285,8 +286,13 @@ namespace MultiplayerCrewManager
                 }
             }
             // add dead
-            if (McmMod.Config.RespawnMode == RespawnMode.MidRound)
+            if (McmMod.Config.RespawnMode is RespawnMode.MidRound or RespawnMode.BetweenRounds)
             {
+                // Added dead character data to the waiting list in BetweenRounds respawn mode
+                foreach (var a in Control.BetweenRoundsAwaiting)
+                {
+                    Control.Awaiting.Add(a);
+                }
                 foreach (var charInfo in Control.Awaiting)
                 {
                     charInfo.ClearCurrentOrders();
@@ -320,6 +326,7 @@ namespace MultiplayerCrewManager
                 CharacterData.Add(charData);
                 str += $"\n    {charInfo.ID} | {charInfo.Name} - New Hire";
             }
+            McmMod.Instance.Control.BetweenRoundsAwaiting.Clear();
             // log status
             McmUtils.Info(str);
         }

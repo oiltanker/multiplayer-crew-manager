@@ -54,17 +54,20 @@ namespace MultiplayerCrewManager
         public McmClientManager ClientManager { get; private set; }
         public RespawnManager RespawnManager { get; private set; }
         public HashSet<CharacterInfo> Awaiting { get; private set; }
+        public List<CharacterInfo> BetweenRoundsAwaiting { get; private set; }
 
         public McmControl(RespawnManager respawnManager, McmClientManager clientManager)
         {
             RespawnManager = respawnManager;
             ClientManager = clientManager;
             Awaiting = new HashSet<CharacterInfo>();
+            BetweenRoundsAwaiting = new List<CharacterInfo>();
         }
 
         public void ResetShuttle()
         {
-            if (RespawnManager != null) resetShuttleMethod?.Invoke(RespawnManager, null);
+            var teamSpecificState = new Barotrauma.Networking.RespawnManager.TeamSpecificState(Barotrauma.CharacterTeamType.Team1);
+            if (RespawnManager != null) resetShuttleMethod?.Invoke(RespawnManager, new object[] { teamSpecificState });
         }
 
         public WayPoint[] GetRespawnPoints(IEnumerable<CharacterInfo> crew)
@@ -189,7 +192,7 @@ namespace MultiplayerCrewManager
         public void UpdateRespawns()
         {
             // do respawn
-            if (respawnTimeBegin != 0 && LuaCsTimer.Time - respawnTimer >= respawnTimeBegin)
+            if (McmMod.Config.RespawnMode == RespawnMode.MidRound && respawnTimeBegin != 0 && LuaCsTimer.Time - respawnTimer >= respawnTimeBegin)
             {
                 if (TryRespawn(LuaCsTimer.Time - respawnTimer > respawnTimeBegin))
                 {

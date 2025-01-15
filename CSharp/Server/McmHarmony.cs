@@ -45,5 +45,21 @@ namespace Mcm_mod
             }
 
         }
+        [HarmonyPatch(typeof(Barotrauma.MultiPlayerCampaign), nameof(Barotrauma.MultiPlayerCampaign.End))]
+        class Patch_End
+        {
+            static void Prefix()
+            {
+                var crewManager = GameMain.GameSession.CrewManager;
+                if (McmMod.Config.RespawnMode == RespawnMode.BetweenRounds)
+                {
+                    foreach (var deadCharacters in Character.CharacterList.FindAll(c => c.IsDead && c.TeamID == CharacterTeamType.Team1))
+                    {
+                        McmMod.Instance.Control.BetweenRoundsAwaiting.Add(deadCharacters.info);
+                    }
+                }
+            }
+
+        }
     }
 }
