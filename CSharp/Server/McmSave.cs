@@ -157,7 +157,8 @@ namespace MultiplayerCrewManager
                         //{
                         //}
                         McmUtils.Warn($"Unit [{p.CharacterInfo.Name}] was missing inventory-data - Defaulting to CharacterInfo.InventoryData");
-                        inventoryData = charInfo.InventoryData;
+                        // If false in Barotrauma.CrewManager.InitializeCharacter the character will get the initial items
+                        charInfo.StartItemsGiven = false;
                     }
                     if (hpData == null) //If unable to read from file; attempt to fall back on current health data
                     {

@@ -45,7 +45,7 @@ namespace Mcm_mod
             }
 
         }
-        [HarmonyPatch(typeof(Barotrauma.CampaignMode), nameof(Barotrauma.CampaignMode.End))]
+        [HarmonyPatch(typeof(Barotrauma.MultiPlayerCampaign), nameof(Barotrauma.MultiPlayerCampaign.End))]
         class Patch_End
         {
             static void Prefix()
